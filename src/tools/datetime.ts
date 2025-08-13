@@ -9,13 +9,14 @@ export const datetime: ToolDescription<Input, Output> = {
   name: "datetime",
   schema: {
     type: "function",
-    name: "datetime",
-    description: "Get the current date and time in ISO format",
-    parameters: {
-      type: "object",
-      properties: {},
+    function: {
+      name: "datetime",
+      description: "Get the current date and time in ISO format",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
     },
-    strict: true,
   },
   function: () => {
     return new Date().toISOString();

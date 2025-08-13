@@ -9,14 +9,15 @@ type Output = string;
 export const getHomeDir: ToolDescription<Input, Output> = {
   name: "getHomeDir",
   schema: {
-    name: "getHomeDir",
-    description: "Get the user's home directory path",
     type: "function",
-    parameters: {
-      type: "object",
-      properties: {},
+    function: {
+      name: "getHomeDir",
+      description: "Get the user's home directory path",
+      parameters: {
+        type: "object",
+        properties: {},
+      },
     },
-    strict: true,
   },
   function: () => {
     return process.env.HOME || process.env.USERPROFILE || "/";

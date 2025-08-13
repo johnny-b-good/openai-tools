@@ -8,17 +8,18 @@ type Output = string;
 export const fileDetect: ToolDescription<Input, Output> = {
   name: "fileDetect",
   schema: {
-    name: "fileDetect",
-    description: "Get type of file. Wrapper for the 'file' command.",
     type: "function",
-    parameters: {
-      type: "object",
-      required: ["path"],
-      properties: {
-        path: { type: "string", description: "Path to target file" },
+    function: {
+      name: "fileDetect",
+      description: "Get type of file. Wrapper for the 'file' command.",
+      parameters: {
+        type: "object",
+        required: ["path"],
+        properties: {
+          path: { type: "string", description: "Path to target file" },
+        },
       },
     },
-    strict: true,
   },
   function: ({ path }) => {
     return execSync(`file ${path}`, { encoding: "utf-8" });

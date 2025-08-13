@@ -10,18 +10,19 @@ type Output = string;
 export const ls: ToolDescription<Input, Output> = {
   name: "ls",
   schema: {
-    name: "ls",
-    description:
-      "List files in a directory. Wrapper for the 'ls -hal' command.",
     type: "function",
-    parameters: {
-      type: "object",
-      required: ["path"],
-      properties: {
-        path: { type: "string", description: "Path to target directory" },
+    function: {
+      name: "ls",
+      description:
+        "List files in a directory. Wrapper for the 'ls -hal' command.",
+      parameters: {
+        type: "object",
+        required: ["path"],
+        properties: {
+          path: { type: "string", description: "Path to target directory" },
+        },
       },
     },
-    strict: true,
   },
   function: ({ path }) => {
     return execSync(`ls -hal ${path}`, { encoding: "utf-8" });

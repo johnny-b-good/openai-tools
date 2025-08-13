@@ -9,7 +9,7 @@ export interface ToolDescription<
   /** Tool's name */
   name: string;
   /** Tool description schema */
-  schema: OpenAI.Responses.FunctionTool;
+  schema: OpenAI.Chat.Completions.ChatCompletionFunctionTool;
   /** Tool function */
   function: (args: Input) => Output;
   /** Tool args validator */

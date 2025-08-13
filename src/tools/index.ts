@@ -2,14 +2,14 @@ import { datetime } from "./datetime";
 import { ls } from "./ls";
 import { getHomeDir } from "./getHomeDir";
 import { fileDetect } from "./fileDetect";
-import { calculator } from "./calculator";
+import { javascriptInterpreter } from "./javascriptInterpreter";
 
 export const allTools = {
   datetime,
   ls,
   getHomeDir,
   fileDetect,
-  calculator,
+  javascriptInterpreter,
 };
 
 export const makeAToolCall = (
@@ -26,21 +26,24 @@ export const makeAToolCall = (
     return getHomeDir.function(args);
   } else if (toolName === "fileDetect" && fileDetect.checkArgs(args)) {
     return fileDetect.function(args);
-  } else if (toolName === "calculator" && calculator.checkArgs(args)) {
-    return calculator.function(args);
+  } else if (
+    toolName === "javascriptInterpreter" &&
+    javascriptInterpreter.checkArgs(args)
+  ) {
+    return javascriptInterpreter.function(args);
   } else {
     throw new Error("Unknown tool name or bad arguments");
   }
 };
 
-export const allToolDescriptions = Object.values(allTools).map(
+export const allToolSchemas = Object.values(allTools).map(
   (tool) => tool.schema,
 );
 
-export const allToolDescriptionsString = allToolDescriptions
-  .map((tool) => {
-    const toolName = tool.name;
-    const toolDescription = tool.description!;
-    return `${toolName} - ${toolDescription}`;
+export const allToolDescriptions = allToolSchemas
+  .map((schema) => {
+    const toolName = schema.function.name;
+    const toolDescription = schema.function.description;
+    return `- ${toolName} - ${toolDescription}`;
   })
   .join("\n\n");

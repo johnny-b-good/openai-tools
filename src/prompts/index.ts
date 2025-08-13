@@ -5,7 +5,7 @@ import Handlebars from "handlebars";
 
 const makeTemplate = <T>(filename: string) => {
   const templateStr = fs.readFileSync(
-    path.join("src/systemModes/toolsMode/prompts", filename),
+    path.join("src", "prompts", filename),
     "utf-8",
   );
   return Handlebars.compile<T>(templateStr);
