@@ -93,8 +93,18 @@ const main = async () => {
             logger.info(toolArgumentsParsed, "[Acting]\nTool params: ");
           }
 
-          const toolResult = makeAToolCall(toolName, toolArgumentsParsed);
-          logger.info(`[Acting]\nTool result: ${toolResult}`);
+          let toolResult;
+          try {
+            toolResult = makeAToolCall(toolName, toolArgumentsParsed);
+            logger.info(`[Acting]\nTool result: ${toolResult}`);
+          } catch (err) {
+            if (err instanceof Error) {
+              toolResult = `ERROR: ${err.name}; ${err.message}`;
+              logger.info(`[Acting]\nTool error: ${err.name}\n${err.message}`);
+            } else {
+              throw err;
+            }
+          }
 
           messages.push({
             role: "tool",
