@@ -2,14 +2,14 @@ import { datetime } from "./datetime";
 import { ls } from "./ls";
 import { getHomeDir } from "./getHomeDir";
 import { fileDetect } from "./fileDetect";
-import { javascriptInterpreter } from "./javascriptInterpreter";
+import { runJavaScript } from "./runJavaScript";
 
 export const allTools = {
   datetime,
   ls,
   getHomeDir,
   fileDetect,
-  javascriptInterpreter,
+  runJavaScript,
 };
 
 export const makeAToolCall = (
@@ -26,11 +26,8 @@ export const makeAToolCall = (
     return getHomeDir.function(args);
   } else if (toolName === "fileDetect" && fileDetect.checkArgs(args)) {
     return fileDetect.function(args);
-  } else if (
-    toolName === "javascriptInterpreter" &&
-    javascriptInterpreter.checkArgs(args)
-  ) {
-    return javascriptInterpreter.function(args);
+  } else if (toolName === "runJavaScript" && runJavaScript.checkArgs(args)) {
+    return runJavaScript.function(args);
   } else {
     throw new Error("Unknown tool name or bad arguments");
   }

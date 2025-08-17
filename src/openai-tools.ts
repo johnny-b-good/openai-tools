@@ -1,10 +1,12 @@
 import OpenAI from "openai";
 import { input } from "@inquirer/prompts";
 import chalk from "chalk";
+import z from "zod/v4";
 
 import { config, logger } from "./utils";
 import { makeAToolCall, allToolDescriptions, allToolSchemas } from "./tools";
-import { toolsSystemPromptTemplate } from "./prompts";
+import { simpleSystemPromptTemplate } from "./prompts";
+import { responseSchema } from "./schemas";
 
 const MAX_STEPS_NUMBER = 10;
 
@@ -18,7 +20,7 @@ const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
 const main = async () => {
   messages.push({
     role: "system",
-    content: toolsSystemPromptTemplate({
+    content: simpleSystemPromptTemplate({
       toolsDescription: allToolDescriptions,
     }),
   });
@@ -43,27 +45,42 @@ const main = async () => {
     const reasoningResponse = await openai.chat.completions.create({
       model: config.openaiModel,
       messages,
+      response_format: {
+        type: "json_schema",
+        json_schema: {
+          name: "response",
+          schema: z.toJSONSchema(responseSchema),
+        },
+      },
     });
 
     const reasoningMessage = reasoningResponse.choices[0].message;
     messages.push(reasoningMessage);
-    logger.info(`[Reasoning]\n${reasoningMessage.content ?? "EMPTY"}`);
 
-    if (reasoningMessage.content === null) {
-      logger.warn("Recieved empty reasoning message content. Odd.");
+    try {
+      if (!reasoningMessage.content) {
+        throw new Error("Empty content message");
+      }
+
+      const reasoningMessageJson = JSON.parse(reasoningMessage.content);
+
+      const reasoningMessageParsed = responseSchema.parse(reasoningMessageJson);
+
+      logger.info(reasoningMessageParsed, "[Reasoning]");
+
+      const { status } = reasoningMessageParsed;
+
+      if (status === "done") {
+        break;
+      }
+    } catch (err) {
+      logger.error(err, "Failed to parse LLM response");
       process.exit(1);
-    }
-
-    if (
-      reasoningMessage.content.includes("__DONE__") ||
-      reasoningMessage.content.includes("__IMPOSSIBLE__")
-    ) {
-      break;
     }
 
     messages.push({
       role: "user",
-      content: "Call the tool you have chosen with required params",
+      content: "Call the tool you have chosen with required arguments",
     });
 
     // Step 2: Acting
@@ -84,11 +101,13 @@ const main = async () => {
 
           logger.info(`[Acting]\nTool name: ${toolName}`);
           if (
-            toolName === "javascriptInterpreter" &&
+            toolName === "runJavaScript" &&
             "source" in toolArgumentsParsed &&
             typeof toolArgumentsParsed.source === "string"
           ) {
-            logger.info(toolArgumentsParsed.source, "[Acting]\nTool params: ");
+            logger.info(
+              `[Acting]\nSource code:\n${toolArgumentsParsed.source}`,
+            );
           } else {
             logger.info(toolArgumentsParsed, "[Acting]\nTool params: ");
           }

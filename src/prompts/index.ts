@@ -14,3 +14,7 @@ const makeTemplate = <T>(filename: string) => {
 export const toolsSystemPromptTemplate = makeTemplate<{
   toolsDescription: string;
 }>("toolsSystemPrompt.hbs");
+
+export const simpleSystemPromptTemplate = makeTemplate<{
+  toolsDescription: string;
+}>("simpleSystemPrompt.hbs");
