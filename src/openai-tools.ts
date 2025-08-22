@@ -3,7 +3,7 @@ import { input } from "@inquirer/prompts";
 import chalk from "chalk";
 import z from "zod/v4";
 
-import { config, logger } from "./utils";
+import { config } from "./utils";
 import { makeAToolCall, allToolDescriptions, allToolSchemas } from "./tools";
 import { simpleSystemPromptTemplate } from "./prompts";
 import { responseSchema } from "./schemas";
@@ -39,11 +39,10 @@ const main = async () => {
     content: prompt,
   });
 
-  logger.info(`Model: ${config.openaiModel}`);
-  logger.info(`API: ${config.openaiBaseUrl}`);
-
   let stepNum = 1;
   while (stepNum < MAX_STEPS_NUMBER) {
+    console.log(chalk.green(`ROUND ${stepNum}`));
+
     // Step 1: Reasoning
     const reasoningResponse = await openai.chat.completions.create({
       model: config.openaiModel,
@@ -69,7 +68,9 @@ const main = async () => {
 
       const reasoningMessageParsed = responseSchema.parse(reasoningMessageJson);
 
-      logger.info(reasoningMessageParsed, "[Reasoning]");
+      console.log(
+        `${chalk.blue("[Reasoning]")}\n${chalk.cyan("Status:")} ${reasoningMessageParsed.status}\n${chalk.cyan("Thoughts:")} ${reasoningMessageParsed.thoughts.trim()}`,
+      );
 
       const { status } = reasoningMessageParsed;
 
@@ -77,7 +78,7 @@ const main = async () => {
         break;
       }
     } catch (err) {
-      logger.error(err, "Failed to parse LLM response");
+      console.error(err, "Failed to parse LLM response");
       process.exit(1);
     }
 
@@ -102,31 +103,31 @@ const main = async () => {
           const toolArguments = toolCall.function.arguments;
           const toolArgumentsParsed = JSON.parse(toolArguments);
 
-          logger.info(`[Acting]\nTool name: ${toolName}`);
+          let toolCallLog = `${chalk.blue("[Acting]")}\n${chalk.cyan("Tool name:")} ${toolName}\n`;
           if (
             toolName === "runJavaScript" &&
             "source" in toolArgumentsParsed &&
             typeof toolArgumentsParsed.source === "string"
           ) {
-            logger.info(
-              `[Acting]\nSource code:\n${toolArgumentsParsed.source}`,
-            );
+            toolCallLog += `${chalk.cyan("Source code:")}\n${toolArgumentsParsed.source}\n`;
           } else {
-            logger.info(toolArgumentsParsed, "[Acting]\nTool params: ");
+            toolCallLog += `${chalk.cyan("Tool arguments:")} ${toolArguments}\n`;
           }
 
           let toolResult;
           try {
             toolResult = makeAToolCall(toolName, toolArgumentsParsed);
-            logger.info(`[Acting]\nTool result: ${toolResult}`);
+            toolCallLog += `${chalk.cyan("Tool result:")} ${toolResult}`;
           } catch (err) {
             if (err instanceof Error) {
               toolResult = `ERROR: ${err.name}; ${err.message}`;
-              logger.info(`[Acting]\nTool error: ${err.name}\n${err.message}`);
+              toolCallLog += `${chalk.red("Tool error:")} ${err.name}\n${err.message}`;
             } else {
               throw err;
             }
           }
+
+          console.log(toolCallLog.trim());
 
           messages.push({
             role: "tool",
@@ -134,17 +135,19 @@ const main = async () => {
             tool_call_id: toolCall.id,
           });
         } else {
-          logger.warn("Unsupported tool type");
+          console.warn("Unsupported tool type");
         }
       }
     } else {
-      logger.warn("No tool calls returned from model");
+      console.warn("No tool calls returned from model");
     }
 
     stepNum++;
 
+    console.log("");
+
     if (stepNum === MAX_STEPS_NUMBER) {
-      logger.warn("Reached step limit");
+      console.warn("Reached step limit");
     }
   }
 
@@ -158,11 +161,14 @@ const main = async () => {
     messages,
   });
 
+  console.log("");
+  console.log(chalk.green("FINAL ANSWER"));
+
   const finalMessage = finalResponse.choices[0].message;
   messages.push(finalMessage);
-  logger.info(finalMessage.content ?? "NO RESPONSE CONTENT");
+  console.log(finalMessage.content ?? "NO RESPONSE CONTENT");
 };
 
 main().catch((err) => {
-  logger.error(err);
+  console.error(err);
 });
