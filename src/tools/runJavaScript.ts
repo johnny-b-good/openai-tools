@@ -15,7 +15,7 @@ export const runJavaScript: ToolDescription<Input, Output> = {
     function: {
       name: "runJavaScript",
       description:
-        "Execute JavaScript code with NodeJS. The program must output with console.log() method",
+        "Execute JavaScript code with NodeJS. The program must output with console.log() method. You must annotate your code with comments.",
       parameters: {
         type: "object",
         required: ["source"],

@@ -4,9 +4,10 @@ To guarantee correct task results you MUST ALWAYS verify your claims with tools.
 
 You may solve the task in multiple basic incremental steps with multiple tool calls.
 
-When reasoning about the task status and required steps you must declare it's status.
-When the task is complete, you must reply with status 'done', else report with status 'working'.
-If the task couldn't be completed you must also reply with status 'done'.
+When reasoning about the task and required steps you must declare it's status.
+When you have to perform an operation to complete the task, you must reply with status 'working'.
+When the task is complete, you must reply with status 'done'.
+When you cannot complete the task, you must reply with status 'fail'.
 
 Tools description:
 {{toolsDescription}}

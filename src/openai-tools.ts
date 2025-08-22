@@ -39,6 +39,9 @@ const main = async () => {
     content: prompt,
   });
 
+  logger.info(`Model: ${config.openaiModel}`);
+  logger.info(`API: ${config.openaiBaseUrl}`);
+
   let stepNum = 1;
   while (stepNum < MAX_STEPS_NUMBER) {
     // Step 1: Reasoning
@@ -70,7 +73,7 @@ const main = async () => {
 
       const { status } = reasoningMessageParsed;
 
-      if (status === "done") {
+      if (status === "done" || status === "fail") {
         break;
       }
     } catch (err) {
@@ -139,6 +142,10 @@ const main = async () => {
     }
 
     stepNum++;
+
+    if (stepNum === MAX_STEPS_NUMBER) {
+      logger.warn("Reached step limit");
+    }
   }
 
   messages.push({
@@ -153,10 +160,7 @@ const main = async () => {
 
   const finalMessage = finalResponse.choices[0].message;
   messages.push(finalMessage);
-
-  console.log(
-    `${chalk.green("✔")} ${chalk.red("[AI]:")} ${finalMessage.content ?? "NO RESPONSE CONTENT"}`,
-  );
+  logger.info(finalMessage.content ?? "NO RESPONSE CONTENT");
 };
 
 main().catch((err) => {
