@@ -5,20 +5,17 @@ import z from "zod/v4";
 
 import { config } from "./utils";
 import { makeAToolCall, allToolDescriptions, allToolSchemas } from "./tools";
-import { simpleSystemPromptTemplate } from "./prompts";
+import { simpleSystemPromptTemplate } from "./templates";
 import { responseSchema } from "./schemas";
+import { openai } from "./consts";
 
 const MAX_STEPS_NUMBER = 10;
-
-const openai = new OpenAI({
-  baseURL: config.openaiBaseUrl,
-  apiKey: config.openaiApiKey,
-});
 
 const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
 
 const main = async () => {
   await initSystem();
+
   await readUserPrompt();
 
   let stepNum = 1;
