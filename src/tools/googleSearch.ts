@@ -5,33 +5,43 @@ import { input } from "@inquirer/prompts";
 import TurndownService from "turndown";
 import OpenAI from "openai";
 import z from "zod/v4";
+import prettier from "prettier";
+import {
+  ChromaClient,
+  type Collection as ChromaCollection,
+  type Metadata as ChromaMetadata,
+} from "chromadb";
+import { v4 as uuidv4 } from "uuid";
 
-import { config } from "../utils";
+import { config, chunkText } from "../utils";
 import { googleSearchResponseSchema } from "../schemas";
 import {
   googleSearchSystemPromptTemplate,
-  googleSearchResultMessageTemplate,
+  googleSearchResultsTemplate,
 } from "../templates";
 import { openai } from "../consts";
 
 const customsearch = google.customsearch("v1");
+
 const turndownService = new TurndownService();
+
+const chromaClient = new ChromaClient();
+
+const TEMP_COLLECTION = "TEMP_COLLECTION";
+const CHUNK_SIZE = 1024;
+const CHUNK_OVERLAP = 128;
 
 async function main() {
   const query = await input({ message: "Search Google:" });
 
   const searchResults = await getGoogleSearchResults(query);
 
+  const collection = await createChromaCollection();
+
   for (const result of searchResults) {
     try {
       const pageContent = await getPageContent(result.link);
-
-      const searchEval = await evaluateSearchResult({ query, ...pageContent });
-
-      if (searchEval?.status === "done") {
-        console.log(searchEval);
-        return;
-      }
+      await populateCollection({ ...pageContent, collection });
     } catch (err) {
       if (err instanceof Error) {
         console.warn(err.message);
@@ -39,6 +49,30 @@ async function main() {
       continue;
     }
   }
+
+  const report = await queryCollection({ question: query, collection });
+
+  await evaluateSearchReport({ query, report });
+
+  await removeChromaCollection();
+
+  // for (const result of searchResults) {
+  //   try {
+  //     const pageContent = await getPageContent(result.link);
+
+  //     // const searchEval = await evaluateSearchResult({ query, ...pageContent });
+
+  //     // if (searchEval?.status === "done") {
+  //     //   console.log(searchEval);
+  //     //   return;
+  //     // }
+  //   } catch (err) {
+  //     if (err instanceof Error) {
+  //       console.warn(err.message);
+  //     }
+  //     continue;
+  //   }
+  // }
 }
 
 const getGoogleSearchResults = async (query: string) => {
@@ -77,15 +111,10 @@ const getPageContent = async (url?: string | null) => {
   virtualConsole.removeAllListeners();
 
   try {
-    console.log("Page loaded");
     const pageText = await pageResponse.text();
-    console.log("Got text");
     const doc = new JSDOM(pageText, { url, virtualConsole });
-    console.log("Got document");
     const reader = new Readability(doc.window.document);
-    console.log("Got reader");
     const article = reader.parse();
-    console.log("Got article");
 
     const markdown =
       article?.content && turndownService.turndown(article?.content);
@@ -94,25 +123,23 @@ const getPageContent = async (url?: string | null) => {
       throw new Error("Missing title or content");
     }
 
-    return { title: article.title, content: markdown, url };
+    const prettyMarkdown = await prettier.format(markdown, {
+      parser: "markdown",
+    });
+
+    return { title: article.title, content: prettyMarkdown, url };
   } catch {
     throw new Error("Failed to parse search result");
   }
 };
 
-const evaluateSearchResult = async ({
+const evaluateSearchReport = async ({
   query,
-  title,
-  url,
-  content,
+  report,
 }: {
   query: string;
-  title: string;
-  url: string;
-  content: string;
+  report: string;
 }) => {
-  console.log(`Evaluating "${title}" at ${url}`);
-
   const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
     {
       role: "system",
@@ -123,11 +150,7 @@ const evaluateSearchResult = async ({
     },
     {
       role: "user",
-      content: googleSearchResultMessageTemplate({
-        title,
-        url,
-        content,
-      }),
+      content: report,
     },
   ];
 
@@ -156,14 +179,110 @@ const evaluateSearchResult = async ({
       searchResultMessageJson,
     );
 
-    return searchResultMessageParsed;
+    // return searchResultMessageParsed;
+
+    console.log(searchResultMessageParsed);
   } catch {
     console.warn("Failed to parse LLM response");
   }
 };
 
+const createChromaCollection = async () => {
+  return await chromaClient.createCollection({
+    name: TEMP_COLLECTION,
+  });
+};
+
+const removeChromaCollection = async () => {
+  await chromaClient.deleteCollection({ name: TEMP_COLLECTION });
+};
+
+const populateCollection = async ({
+  title,
+  content,
+  url,
+  collection,
+}: {
+  title: string;
+  content: string;
+  url: string;
+  collection: ChromaCollection;
+}) => {
+  const pageId = uuidv4();
+
+  const pageData: {
+    ids: string[];
+    embeddings: number[][];
+    metadatas: ChromaMetadata[];
+    documents: string[];
+  } = {
+    ids: [],
+    embeddings: [],
+    metadatas: [],
+    documents: [],
+  };
+
+  const chunks = chunkText(content, {
+    chunkSize: CHUNK_SIZE,
+    chunkOverlap: CHUNK_OVERLAP,
+  });
+
+  for (const chunk of chunks) {
+    pageData.ids.push(uuidv4());
+    pageData.metadatas.push({
+      title,
+      url,
+      pageId,
+    });
+    pageData.documents.push(chunk);
+  }
+
+  const embeddingsResponse = await openai.embeddings.create({
+    input: chunks,
+    model: config.openaiEmbeddingModel,
+  });
+
+  pageData.embeddings = embeddingsResponse.data.map((item) => item.embedding);
+
+  await collection.add(pageData);
+};
+
+const queryCollection = async ({
+  question,
+  collection,
+}: {
+  question: string;
+  collection: ChromaCollection;
+}) => {
+  const embeddingsResponse = await openai.embeddings.create({
+    input: question,
+    model: config.openaiEmbeddingModel,
+  });
+
+  const embeddings = embeddingsResponse.data.map((item) => item.embedding);
+
+  const queryResult = await collection.query({
+    queryEmbeddings: embeddings,
+    // nResults: 5,
+  });
+
+  const rows = queryResult.rows();
+
+  const rowsString = googleSearchResultsTemplate({
+    results: rows[0].map((row, index) => ({
+      index,
+      content: row.document ?? "",
+      title: row.metadata?.title?.toString() ?? "",
+      url: row.metadata?.url?.toString() ?? "",
+    })),
+  });
+
+  return rowsString;
+};
+
 main().catch((err) => {
   console.error(err);
+  removeChromaCollection();
 });
 
 // import * as z from "zod/v4";

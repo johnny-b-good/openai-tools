@@ -4,6 +4,7 @@ import { logger } from "./logger";
 
 export const config = {
   openaiModel: process.env.OPENAI_MODEL ?? "__NULL__",
+  openaiEmbeddingModel: process.env.OPENAI_EMBEDDING_MODEL ?? "__NULL__",
   openaiBaseUrl: process.env.OPENAI_BASE_URL ?? "__NULL__",
   openaiApiKey: process.env.OPENAI_API_KEY ?? "__NULL__",
   googleApiKey: process.env.GOOGLE_API_KEY ?? "__NULL__",

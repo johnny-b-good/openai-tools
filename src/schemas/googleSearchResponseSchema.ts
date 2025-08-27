@@ -2,16 +2,24 @@ import z from "zod/v4";
 
 export const googleSearchResponseSchema = z
   .object({
-    status: z
-      .enum(["done", "continue"])
+    quality: z
+      .enum(["good", "bad"])
       .describe(
-        "Status of the web search task task. Status 'done' indicates that the answer is found. Status 'continue' indicates that further search is needed.",
+        "Quality of search results. Evaluate if these results answer users question",
       ),
-    resultQuote: z
+    url: z.string().describe("URL of the selected search result"),
+    title: z.string().describe("Title of the selected search result"),
+    quote: z
       .string()
-      .optional()
-      .describe("Quote from the search result that answers user's question."),
+      .describe(
+        "Quote from the selected search result that answers user's question.",
+      ),
+    finalAnswer: z
+      .string()
+      .describe(
+        "Formulate final answer for user's question based on the selected search result's quote.",
+      ),
   })
   .describe(
-    "Object containing description of current web search task status and search result quote.",
+    "Object containing your conclusions on provided web search results.",
   );

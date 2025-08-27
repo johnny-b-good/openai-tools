@@ -24,8 +24,11 @@ export const googleSearchSystemPromptTemplate = makeTemplate<{
   query: string;
 }>("googleSearchSystemPrompt.hbs");
 
-export const googleSearchResultMessageTemplate = makeTemplate<{
-  title: string;
-  url: string;
-  content: string;
-}>("googleSearchResultMessage.hbs");
+export const googleSearchResultsTemplate = makeTemplate<{
+  results: Array<{
+    index: number;
+    title: string;
+    url: string;
+    content: string;
+  }>;
+}>("googleSearchResults.hbs");
