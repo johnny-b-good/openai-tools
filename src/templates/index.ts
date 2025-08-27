@@ -32,3 +32,7 @@ export const googleSearchResultsTemplate = makeTemplate<{
     content: string;
   }>;
 }>("googleSearchResults.hbs");
+
+export const googleSearchSummaryPromptTemplate = makeTemplate<{
+  question: string;
+}>("googleSearchSummaryPrompt.hbs");

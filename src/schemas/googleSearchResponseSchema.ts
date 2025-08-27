@@ -5,19 +5,13 @@ export const googleSearchResponseSchema = z
     quality: z
       .enum(["good", "bad"])
       .describe(
-        "Quality of search results. Evaluate if these results answer users question",
+        "Quality of search results. Evaluate if these results answer users question.",
       ),
-    url: z.string().describe("URL of the selected search result"),
-    title: z.string().describe("Title of the selected search result"),
-    quote: z
+
+    answer: z
       .string()
       .describe(
-        "Quote from the selected search result that answers user's question.",
-      ),
-    finalAnswer: z
-      .string()
-      .describe(
-        "Formulate final answer for user's question based on the selected search result's quote.",
+        "Formulate final answer for user's question based on the selected search results.",
       ),
   })
   .describe(

@@ -14,10 +14,14 @@ import {
 import { v4 as uuidv4 } from "uuid";
 
 import { config, chunkText } from "../utils";
-import { googleSearchResponseSchema } from "../schemas";
+import {
+  googleSearchResponseSchema,
+  pageSummaryResponseSchema,
+} from "../schemas";
 import {
   googleSearchSystemPromptTemplate,
   googleSearchResultsTemplate,
+  googleSearchSummaryPromptTemplate,
 } from "../templates";
 import { openai } from "../consts";
 
@@ -30,49 +34,51 @@ const chromaClient = new ChromaClient();
 const TEMP_COLLECTION = "TEMP_COLLECTION";
 const CHUNK_SIZE = 1024;
 const CHUNK_OVERLAP = 128;
+const GOOGLE_SEARCH_RESULTS_NUM = 10;
+const CHROMA_SEARCH_RESULTS_NUM = 20;
 
 async function main() {
   const query = await input({ message: "Search Google:" });
 
-  const searchResults = await getGoogleSearchResults(query);
+  const googleResults = await getGoogleSearchResults(query);
 
-  const collection = await createChromaCollection();
+  // const collection = await createChromaCollection();
 
-  for (const result of searchResults) {
+  // TODO: предварительное ранжирование источников!
+
+  for (const result of googleResults) {
     try {
       const pageContent = await getPageContent(result.link);
-      await populateCollection({ ...pageContent, collection });
+      // console.log(pageContent.url);
+      // console.log(pageContent.title);
+      // console.log(pageContent.content);
+      // await populateCollection({ ...pageContent, collection });
+      const summary = await summarizePageContent(pageContent.content, query);
+      console.log(summary);
     } catch (err) {
       if (err instanceof Error) {
         console.warn(err.message);
+      } else {
+        console.warn("Unknown error");
       }
       continue;
     }
   }
 
-  const report = await queryCollection({ question: query, collection });
+  // const collectionResults = await queryCollection({
+  //   question: query,
+  //   collection,
+  // });
 
-  await evaluateSearchReport({ query, report });
+  // const uniqueUrls = new Set(collectionResults.map((res) => res.url));
 
-  await removeChromaCollection();
+  // const report = googleSearchResultsTemplate({ results: collectionResults });
 
-  // for (const result of searchResults) {
-  //   try {
-  //     const pageContent = await getPageContent(result.link);
+  // const finalAnswer = await evaluateSearchReport({ query, report });
 
-  //     // const searchEval = await evaluateSearchResult({ query, ...pageContent });
+  // console.log({ ...finalAnswer, uniqueUrls });
 
-  //     // if (searchEval?.status === "done") {
-  //     //   console.log(searchEval);
-  //     //   return;
-  //     // }
-  //   } catch (err) {
-  //     if (err instanceof Error) {
-  //       console.warn(err.message);
-  //     }
-  //     continue;
-  //   }
-  // }
+  // await removeChromaCollection();
 }
 
 const getGoogleSearchResults = async (query: string) => {
@@ -80,6 +86,7 @@ const getGoogleSearchResults = async (query: string) => {
     cx: config.googleCustomSearchId,
     q: query,
     auth: config.googleApiKey,
+    num: GOOGLE_SEARCH_RESULTS_NUM,
   });
 
   if (!response.data.items) {
@@ -133,6 +140,50 @@ const getPageContent = async (url?: string | null) => {
   }
 };
 
+const summarizePageContent = async (text: string, query: string) => {
+  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+    {
+      role: "system",
+      content: googleSearchSummaryPromptTemplate({
+        question: query,
+      }),
+    },
+    {
+      role: "user",
+      content: text,
+    },
+  ];
+
+  const summaryResponse = await openai.chat.completions.create({
+    model: config.openaiModel,
+    messages,
+    response_format: {
+      type: "json_schema",
+      json_schema: {
+        name: "response",
+        schema: z.toJSONSchema(pageSummaryResponseSchema),
+      },
+    },
+  });
+
+  const summaryMessage = summaryResponse.choices[0].message;
+
+  if (!summaryMessage.content) {
+    throw new Error("Empty LLM message");
+  }
+
+  try {
+    const summaryMessageJson = JSON.parse(summaryMessage.content);
+
+    const summaryMessageParsed =
+      pageSummaryResponseSchema.parse(summaryMessageJson);
+
+    return summaryMessageParsed;
+  } catch {
+    throw new Error("Failed to parse LLM response");
+  }
+};
+
 const evaluateSearchReport = async ({
   query,
   report,
@@ -179,16 +230,14 @@ const evaluateSearchReport = async ({
       searchResultMessageJson,
     );
 
-    // return searchResultMessageParsed;
-
-    console.log(searchResultMessageParsed);
+    return searchResultMessageParsed;
   } catch {
-    console.warn("Failed to parse LLM response");
+    throw new Error("Failed to parse LLM response");
   }
 };
 
 const createChromaCollection = async () => {
-  return await chromaClient.createCollection({
+  return await chromaClient.getOrCreateCollection({
     name: TEMP_COLLECTION,
   });
 };
@@ -197,6 +246,7 @@ const removeChromaCollection = async () => {
   await chromaClient.deleteCollection({ name: TEMP_COLLECTION });
 };
 
+// TODO: Cache search results
 const populateCollection = async ({
   title,
   content,
@@ -263,26 +313,21 @@ const queryCollection = async ({
 
   const queryResult = await collection.query({
     queryEmbeddings: embeddings,
-    // nResults: 5,
+    nResults: CHROMA_SEARCH_RESULTS_NUM,
   });
 
   const rows = queryResult.rows();
 
-  const rowsString = googleSearchResultsTemplate({
-    results: rows[0].map((row, index) => ({
-      index,
-      content: row.document ?? "",
-      title: row.metadata?.title?.toString() ?? "",
-      url: row.metadata?.url?.toString() ?? "",
-    })),
-  });
-
-  return rowsString;
+  return rows[0].map((row, index) => ({
+    index,
+    content: row.document ?? "<EMPTY>",
+    title: row.metadata?.title?.toString() ?? "<EMPTY>",
+    url: row.metadata?.url?.toString() ?? "<EMPTY>",
+  }));
 };
 
 main().catch((err) => {
   console.error(err);
-  removeChromaCollection();
 });
 
 // import * as z from "zod/v4";
