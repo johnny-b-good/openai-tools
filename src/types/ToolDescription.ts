@@ -1,17 +1,11 @@
-import { type OpenAI } from "openai";
+import z from "zod";
 
-export interface ToolDescription<
-  Input extends {
-    [key: string]: unknown;
-  },
-  Output,
-> {
-  /** Tool's name */
+export type ToolArgs = Record<string, unknown>;
+
+// eslint-disable-next-line @typescript-eslint/no-empty-object-type
+export interface ToolDescription<T extends ToolArgs = {}> {
   name: string;
-  /** Tool description schema */
-  schema: OpenAI.Chat.Completions.ChatCompletionFunctionTool;
-  /** Tool function */
-  function: (args: Input) => Output;
-  /** Tool args validator */
-  checkArgs: (args: unknown) => args is Input;
+  description: string;
+  zodSchema?: z.ZodType<T>;
+  toolFunction: (args: T) => string | Promise<string>;
 }

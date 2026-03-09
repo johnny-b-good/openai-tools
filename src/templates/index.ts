@@ -11,28 +11,6 @@ const makeTemplate = <T>(filename: string) => {
   return Handlebars.compile<T>(templateStr);
 };
 
-export const toolsSystemPromptTemplate = makeTemplate<{
-  toolsDescription: string;
-}>("toolsSystemPrompt.hbs");
-
-export const simpleSystemPromptTemplate = makeTemplate<{
-  toolsDescription: string;
-}>("simpleSystemPrompt.hbs");
-
-export const googleSearchSystemPromptTemplate = makeTemplate<{
-  question: string;
-  query: string;
-}>("googleSearchSystemPrompt.hbs");
-
-export const googleSearchResultsTemplate = makeTemplate<{
-  results: Array<{
-    index: number;
-    title: string;
-    url: string;
-    content: string;
-  }>;
-}>("googleSearchResults.hbs");
-
-export const googleSearchSummaryPromptTemplate = makeTemplate<{
-  question: string;
-}>("googleSearchSummaryPrompt.hbs");
+export const simpleSystemPromptTemplate = makeTemplate(
+  "simpleSystemPrompt.hbs",
+);
