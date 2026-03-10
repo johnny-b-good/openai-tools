@@ -1,46 +1,55 @@
+import type OpenAI from "openai";
+import z from "zod";
+
 import { datetime } from "./datetime";
 import { ls } from "./ls";
 import { getHomeDir } from "./getHomeDir";
 import { fileDetect } from "./fileDetect";
 import { runJavaScript } from "./runJavaScript";
+import type { ToolDescription, ToolArgs } from "../types";
 
-export const allTools = {
-  datetime,
-  ls,
-  getHomeDir,
-  fileDetect,
-  runJavaScript,
-};
+export const allTools = [datetime, ls, getHomeDir, fileDetect, runJavaScript];
 
-export const makeAToolCall = (
-  toolName: string,
-  args: {
-    [key: string]: unknown;
-  },
-) => {
-  if (toolName === "datetime" && datetime.checkArgs(args)) {
-    return datetime.function(args);
-  } else if (toolName === "ls" && ls.checkArgs(args)) {
-    return ls.function(args);
-  } else if (toolName === "getHomeDir" && getHomeDir.checkArgs(args)) {
-    return getHomeDir.function(args);
-  } else if (toolName === "fileDetect" && fileDetect.checkArgs(args)) {
-    return fileDetect.function(args);
-  } else if (toolName === "runJavaScript" && runJavaScript.checkArgs(args)) {
-    return runJavaScript.function(args);
-  } else {
-    throw new Error("Unknown tool name or bad arguments");
+export const runToolByName = async (toolName: string, toolArgs: string) => {
+  const tool = allTools.find((tool) => tool.name === toolName);
+
+  if (!tool) {
+    throw new Error(`Unknown tool name: ${toolName}`);
   }
+
+  let args;
+  try {
+    args = JSON.parse(toolArgs);
+  } catch {
+    throw new Error("Malformed tool arguments");
+  }
+
+  const { zodSchema, toolFunction } = tool;
+
+  if (zodSchema && zodSchema.safeParse(args).error) {
+    throw new Error("Bad tool arguments");
+  }
+
+  return await toolFunction(args);
 };
 
-export const allToolSchemas = Object.values(allTools).map(
-  (tool) => tool.schema,
-);
+export const makeToolSchema = <T extends ToolArgs>(
+  tool: ToolDescription<T>,
+): OpenAI.Chat.Completions.ChatCompletionFunctionTool => ({
+  type: "function",
+  function: {
+    name: tool.name,
+    description: tool.description,
+    parameters: tool.zodSchema
+      ? z.toJSONSchema(tool.zodSchema)
+      : {
+          type: "object",
+          properties: {},
+          required: [],
+        },
+  },
+});
 
-export const allToolDescriptions = allToolSchemas
-  .map((schema) => {
-    const toolName = schema.function.name;
-    const toolDescription = schema.function.description;
-    return `- ${toolName} - ${toolDescription}`;
-  })
-  .join("\n\n");
+export const allToolSchemas = allTools.map((tool) =>
+  makeToolSchema(tool as ToolDescription),
+);
