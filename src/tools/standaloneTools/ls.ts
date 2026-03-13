@@ -2,9 +2,9 @@ import { execFileSync } from "node:child_process";
 
 import z from "zod";
 
-import { type ToolDescription } from "../types";
+import { StandaloneTool } from "./StandaloneTool";
 
-export const ls: ToolDescription<{ path: string }> = {
+export const ls = new StandaloneTool<{ path: string }>({
   name: "ls",
   description: "List files in a directory. Wrapper for the 'ls -hal' command.",
   zodSchema: z.object({
@@ -13,4 +13,4 @@ export const ls: ToolDescription<{ path: string }> = {
   toolFunction: ({ path }) => {
     return execFileSync("ls", ["-hal", path], { encoding: "utf-8" });
   },
-};
+});

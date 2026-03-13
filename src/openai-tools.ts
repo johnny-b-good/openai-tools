@@ -3,9 +3,9 @@ import { input } from "@inquirer/prompts";
 import chalk from "chalk";
 
 import { config } from "./utils";
-import { runToolByName, allToolSchemas } from "./tools";
 import { simpleSystemPromptTemplate } from "./templates";
 import { openai } from "./consts";
+import { toolRouter } from "./tools";
 
 const MAX_STEPS_NUMBER = 16;
 
@@ -13,6 +13,8 @@ const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
 
 const main = async () => {
   await initSystem();
+
+  await toolRouter.connectAll();
 
   await readUserPrompt();
 
@@ -64,7 +66,7 @@ const runStep = async () => {
   const response = await openai.chat.completions.create({
     model: config.openaiModel,
     messages,
-    tools: allToolSchemas,
+    tools: toolRouter.toolsSchemas,
   });
 
   /** LLM response message. */
@@ -95,7 +97,7 @@ const runStep = async () => {
 
       // Execute tool, save it's results.
       try {
-        const toolResult = await runToolByName(toolName, toolArguments);
+        const toolResult = await toolRouter.runTool(toolName, toolArguments);
 
         console.log(`${chalk.cyan("Tool result:")} ${toolResult}`);
 

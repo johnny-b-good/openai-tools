@@ -3,9 +3,9 @@ import { writeFileSync, rmSync } from "node:fs";
 
 import z from "zod";
 
-import { type ToolDescription } from "../types";
+import { StandaloneTool } from "./StandaloneTool";
 
-export const runJavaScript: ToolDescription<{ source: string }> = {
+export const runJavaScript = new StandaloneTool<{ source: string }>({
   name: "runJavaScript",
   description:
     "Execute JavaScript code with NodeJS. The program must output with console.log() method. You must annotate your code with comments.",
@@ -18,4 +18,4 @@ export const runJavaScript: ToolDescription<{ source: string }> = {
     rmSync("temp.js");
     return result;
   },
-};
+});
