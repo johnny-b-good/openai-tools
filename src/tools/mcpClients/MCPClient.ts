@@ -1,7 +1,6 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type OpenAI from "openai";
-import chalk from "chalk";
 
 export class MCPClient {
   private name: string;
@@ -54,18 +53,8 @@ export class MCPClient {
       });
 
       this.toolNames = toolsResult.tools.map((tool) => tool.name);
-
-      console.log(
-        `${chalk.cyan("Connected to MCP server:")}`,
-        this.name,
-        this.toolsSchemas.map(({ function: { name } }) => name),
-      );
-    } catch (e) {
-      console.log(
-        `${chalk.red("Failed to connect to MCP server:")}`,
-        this.name,
-      );
-      throw e;
+    } catch {
+      throw new Error(`Failed to connect to MCP server ${this.name}`);
     }
   }
 

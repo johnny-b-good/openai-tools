@@ -16,21 +16,18 @@ const main = async () => {
 
   await agent.init();
 
-  const prompt = await readUserPrompt();
-
-  agent.pushUserMessage(prompt);
-  await agent.run();
-};
-
-/** Read user's prompt from input. */
-const readUserPrompt = async () => {
+  let prompt: string;
   try {
-    return await input({
+    prompt = await input({
       message: "Prompt:",
     });
   } catch {
     process.exit(1);
   }
+
+  agent.pushUserMessage(prompt);
+  await agent.run();
+  await toolRouter.disconnectAll();
 };
 
 main().catch((err) => {
