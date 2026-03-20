@@ -8,6 +8,8 @@ export const config = {
   openaiModel: process.env.OPENAI_MODEL ?? NOT_SET,
   openaiBaseUrl: process.env.OPENAI_BASE_URL ?? NOT_SET,
   openaiApiKey: process.env.OPENAI_API_KEY ?? NOT_SET,
+
+  filesystemAccessRoot: process.env.FILESYSTEM_ACCESS_ROOT ?? NOT_SET,
 };
 
 for (const [key, value] of Object.entries(config)) {
