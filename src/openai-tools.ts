@@ -16,18 +16,20 @@ const main = async () => {
 
   await agent.init();
 
-  let prompt: string;
-  try {
-    prompt = await input({
-      message: "Prompt:",
-    });
-  } catch {
-    process.exit(1);
-  }
+  while (true) {
+    let prompt: string;
+    try {
+      prompt = await input({
+        message: "Prompt:",
+      });
+    } catch {
+      await toolRouter.disconnectAll();
+      process.exit(1);
+    }
 
-  agent.pushUserMessage(prompt);
-  await agent.run();
-  await toolRouter.disconnectAll();
+    agent.pushUserMessage(prompt);
+    await agent.run();
+  }
 };
 
 main().catch((err) => {
