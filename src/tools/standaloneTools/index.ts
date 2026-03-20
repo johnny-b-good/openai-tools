@@ -5,6 +5,7 @@ import { ls } from "./ls";
 import { getHomeDir } from "./getHomeDir";
 import { fileDetect } from "./fileDetect";
 import { runJavaScript } from "./runJavaScript";
+import { runBashCommand } from "./runBashCommand";
 
 export const standaloneTools = [
   datetime,
@@ -12,4 +13,5 @@ export const standaloneTools = [
   getHomeDir,
   fileDetect,
   runJavaScript,
+  runBashCommand,
 ];
