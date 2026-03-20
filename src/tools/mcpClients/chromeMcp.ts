@@ -1,7 +1,7 @@
 import { MCPClient } from "./MCPClient";
 
 export const chromeMcp = new MCPClient({
-  name: "Chrome DevTools",
+  name: "chrome",
   command: "npx",
   args: [
     "-y",

@@ -3,7 +3,7 @@ import { MCPClient } from "./MCPClient";
 import { config } from "../../utils";
 
 export const filesystemMcp = new MCPClient({
-  name: "Filesystem",
+  name: "filesystem",
   command: "npx",
   args: [
     "-y",

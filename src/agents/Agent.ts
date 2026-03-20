@@ -1,7 +1,7 @@
 import OpenAI from "openai";
 
-import type { ToolRouter } from "./tools/ToolRouter";
-import { logger } from "./utils";
+import type { ToolRouter } from "../tools/ToolRouter";
+import { logger } from "../utils";
 
 const MAX_STEPS_NUMBER = 32;
 
@@ -39,7 +39,7 @@ export class Agent {
     this.isInitialized = true;
   }
 
-  checkForInit() {
+  private checkForInit() {
     if (!this.isInitialized) {
       throw new Error("Please call the init method befor using the agent");
     }
@@ -55,7 +55,7 @@ export class Agent {
   }
 
   /** Run acting step. */
-  run = async (): Promise<string> => {
+  async run(): Promise<string> {
     this.checkForInit();
 
     let stepNum = 0;
@@ -134,5 +134,9 @@ export class Agent {
     }
 
     return "Error: maximum step number reached";
-  };
+  }
+
+  async destroy() {
+    await this.destroy();
+  }
 }

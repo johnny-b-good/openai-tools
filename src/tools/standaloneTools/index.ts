@@ -1,17 +1,8 @@
 export { StandaloneTool } from "./StandaloneTool";
 
-import { datetime } from "./datetime";
-import { ls } from "./ls";
-import { getHomeDir } from "./getHomeDir";
-import { fileDetect } from "./fileDetect";
-import { runJavaScript } from "./runJavaScript";
-import { runBashCommand } from "./runBashCommand";
-
-export const standaloneTools = [
-  datetime,
-  ls,
-  getHomeDir,
-  fileDetect,
-  runJavaScript,
-  runBashCommand,
-];
+export { datetime } from "./datetime";
+export { ls } from "./ls";
+export { getHomeDir } from "./getHomeDir";
+export { fileDetect } from "./fileDetect";
+export { runJavaScript } from "./runJavaScript";
+export { runBashCommand } from "./runBashCommand";

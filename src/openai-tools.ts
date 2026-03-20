@@ -3,15 +3,20 @@ import { input } from "@inquirer/prompts";
 import { config } from "./utils";
 import { simpleSystemPromptTemplate } from "./templates";
 import { openai } from "./consts";
-import { toolRouter } from "./tools";
-import { Agent } from "./Agent";
+import { ToolRouter } from "./tools";
+import { datetime } from "./tools/standaloneTools";
+import { filesystemMcp } from "./tools/mcpClients";
+import { Agent } from "./agents";
 
 const main = async () => {
   const agent = new Agent({
     openai,
     modelName: config.openaiModel,
     systemPrompt: simpleSystemPromptTemplate({}),
-    toolRouter,
+    toolRouter: new ToolRouter({
+      mcpClients: [filesystemMcp],
+      standaloneTools: [datetime],
+    }),
   });
 
   await agent.init();
@@ -23,7 +28,7 @@ const main = async () => {
         message: "Prompt:",
       });
     } catch {
-      await toolRouter.disconnectAll();
+      await agent.destroy();
       process.exit(1);
     }
 
