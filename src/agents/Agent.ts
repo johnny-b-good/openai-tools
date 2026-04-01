@@ -64,11 +64,28 @@ export class Agent {
       stepNum++;
 
       /** LLM response object. */
-      const response = await this.openai.chat.completions.create({
-        model: this.modelName,
-        messages: this.messages,
-        tools: this.toolRouter.toolsSchemas,
-      });
+      let response: OpenAI.Chat.Completions.ChatCompletion;
+
+      try {
+        response = await this.openai.chat.completions.create({
+          model: this.modelName,
+          messages: this.messages,
+          tools: this.toolRouter.toolsSchemas,
+        });
+      } catch (err) {
+        if (err instanceof OpenAI.APIError) {
+          logger.error(`API calling error: ${err.message}`);
+
+          this.messages.push({
+            role: "system",
+            content: `API calling error: ${err.message}`,
+          });
+
+          continue;
+        } else {
+          throw err;
+        }
+      }
 
       /** LLM response message. */
       const message = response.choices[0].message;
@@ -137,6 +154,6 @@ export class Agent {
   }
 
   async destroy() {
-    await this.destroy();
+    await this.toolRouter.disconnectAll();
   }
 }
