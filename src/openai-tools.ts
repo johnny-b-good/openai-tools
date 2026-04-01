@@ -4,8 +4,6 @@ import { config } from "./utils";
 import { simpleSystemPromptTemplate } from "./templates";
 import { openai } from "./consts";
 import { ToolRouter } from "./tools";
-import { datetime } from "./tools/standaloneTools";
-import { filesystemMcp } from "./tools/mcpClients";
 import { Agent } from "./agents";
 
 const main = async () => {
@@ -14,8 +12,8 @@ const main = async () => {
     modelName: config.openaiModel,
     systemPrompt: simpleSystemPromptTemplate({}),
     toolRouter: new ToolRouter({
-      mcpClients: [filesystemMcp],
-      standaloneTools: [datetime],
+      enabledMcps: config.enabledMcps,
+      enabledTools: config.enabledTools,
     }),
   });
 

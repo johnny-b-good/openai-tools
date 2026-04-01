@@ -1,23 +1,48 @@
 import type OpenAI from "openai";
 
-import type { MCPClient } from "./mcpClients";
-import type { StandaloneTool } from "./standaloneTools";
+import { type MCPClient, allMcpClients } from "./mcpClients";
+import { allStandaloneTools, type AllStandaloneTools } from "./standaloneTools";
+import { logger } from "../utils";
 
 export class ToolRouter {
   private mcpClients: Array<MCPClient>;
-  private standaloneTools: Array<StandaloneTool>;
+  private standaloneTools: Array<AllStandaloneTools>;
 
   toolsSchemas: OpenAI.Chat.Completions.ChatCompletionFunctionTool[] = [];
 
   constructor({
-    mcpClients,
-    standaloneTools,
+    enabledMcps,
+    enabledTools,
   }: {
-    mcpClients: Array<MCPClient>;
-    standaloneTools: Array<StandaloneTool>;
+    enabledMcps: Array<string>;
+    enabledTools: Array<string>;
   }) {
-    this.mcpClients = mcpClients;
-    this.standaloneTools = standaloneTools;
+    this.mcpClients = [];
+    for (const enabledMcp of enabledMcps) {
+      const mcp = allMcpClients[enabledMcp];
+      if (mcp) {
+        this.mcpClients.push(mcp);
+      } else {
+        throw new Error(`Unknown MCP "${enabledMcp}"`);
+      }
+    }
+
+    this.standaloneTools = [];
+    for (const enabledTool of enabledTools) {
+      const tool = allStandaloneTools[enabledTool];
+      if (tool) {
+        this.standaloneTools.push(tool);
+      } else {
+        throw new Error(`Unknown tool "${enabledTool}"`);
+      }
+    }
+
+    logger.info(
+      `Enabled MCP clients: ${enabledMcps.length > 0 ? enabledMcps.join(", ") : "<NONE>"}`,
+    );
+    logger.info(
+      `Enabled tools: ${enabledTools.length > 0 ? enabledTools.join(", ") : "<NONE>"}`,
+    );
   }
 
   async connectAll() {

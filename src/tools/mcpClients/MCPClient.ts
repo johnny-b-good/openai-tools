@@ -3,14 +3,14 @@ import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js"
 import type OpenAI from "openai";
 
 export class MCPClient {
-  private name: string;
+  name: string;
+  toolsSchemas: OpenAI.Chat.Completions.ChatCompletionFunctionTool[] = [];
+  toolNames: Array<string> = [];
+
   private command: string;
   private args: Array<string>;
   private mcp: Client;
   private transport: StdioClientTransport | null = null;
-
-  toolsSchemas: OpenAI.Chat.Completions.ChatCompletionFunctionTool[] = [];
-  toolNames: Array<string> = [];
 
   constructor({
     name,
