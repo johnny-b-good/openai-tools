@@ -2,9 +2,9 @@ import { execFileSync } from "node:child_process";
 
 import z from "zod";
 
-import { type ToolDescription } from "../types";
+import { StandaloneTool } from "./StandaloneTool";
 
-export const fileDetect: ToolDescription<{ path: string }> = {
+export const fileDetect = new StandaloneTool<{ path: string }>({
   name: "fileDetect",
   description: "Get the type of file. Wrapper for the 'file' command.",
   zodSchema: z.object({
@@ -13,4 +13,4 @@ export const fileDetect: ToolDescription<{ path: string }> = {
   toolFunction: ({ path }) => {
     return execFileSync("file", ["-hal", path], { encoding: "utf-8" });
   },
-};
+});
