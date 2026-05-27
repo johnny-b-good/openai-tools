@@ -10,7 +10,7 @@ const COMMAND_TIMEOUT = 60 * 1000;
 
 const execAsPromise = util.promisify(exec);
 
-export const runBashCommand = new StandaloneTool<{ command: string }>({
+export const runBashCommand = new StandaloneTool({
   name: "run_bash_command",
   description:
     "Executes a bash/shell command in the current environment. Returns the standard output (stdout) and standard error (stderr). Useful for system administration, file manipulation, or running CLI tools.",

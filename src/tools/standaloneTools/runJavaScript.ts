@@ -5,7 +5,7 @@ import z from "zod";
 
 import { StandaloneTool } from "./StandaloneTool";
 
-export const runJavaScript = new StandaloneTool<{ source: string }>({
+export const runJavaScript = new StandaloneTool({
   name: "runJavaScript",
   description:
     "Execute JavaScript code with NodeJS. The program must output with console.log() method. You must annotate your code with comments.",

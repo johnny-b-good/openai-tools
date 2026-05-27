@@ -4,7 +4,7 @@ import z from "zod";
 
 import { StandaloneTool } from "./StandaloneTool";
 
-export const fileDetect = new StandaloneTool<{ path: string }>({
+export const fileDetect = new StandaloneTool({
   name: "fileDetect",
   description: "Get the type of file. Wrapper for the 'file' command.",
   zodSchema: z.object({
