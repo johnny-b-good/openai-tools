@@ -1,10 +1,7 @@
 import z from "zod";
 import type OpenAI from "openai";
 
-export type ToolArgs = Record<string, unknown>;
-
-// eslint-disable-next-line @typescript-eslint/no-empty-object-type
-export class StandaloneTool<T extends ToolArgs = {}> {
+export class StandaloneTool<T> {
   name: string;
   private description: string;
   private zodSchema?: z.ZodType<T>;

@@ -4,7 +4,7 @@ import z from "zod";
 
 import { StandaloneTool } from "./StandaloneTool";
 
-export const ls = new StandaloneTool<{ path: string }>({
+export const ls = new StandaloneTool({
   name: "ls",
   description: "List files in a directory. Wrapper for the 'ls -hal' command.",
   zodSchema: z.object({
