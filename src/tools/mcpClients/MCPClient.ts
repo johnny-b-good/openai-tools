@@ -11,15 +11,18 @@ export class MCPClient {
   private args: Array<string>;
   private mcp: Client;
   private transport: StdioClientTransport | null = null;
+  private env?: Record<string, string>;
 
   constructor({
     name,
     command,
     args,
+    env,
   }: {
     name: string;
     command: string;
     args: Array<string>;
+    env?: Record<string, string>;
   }) {
     this.name = name;
     this.command = command;
@@ -28,6 +31,7 @@ export class MCPClient {
       name: "mcp-client-cli",
       version: "1.0.0",
     });
+    this.env = env;
   }
 
   async connect() {
@@ -35,6 +39,7 @@ export class MCPClient {
       this.transport = new StdioClientTransport({
         command: this.command,
         args: this.args,
+        env: this.env,
       });
 
       await this.mcp.connect(this.transport);
