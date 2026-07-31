@@ -5,6 +5,11 @@ import { logger } from "../utils";
 
 const MAX_STEPS_NUMBER = 32;
 
+type ReasoningChatCompletionMessage =
+  OpenAI.Chat.Completions.ChatCompletionMessage & {
+    reasoning_content?: string;
+  };
+
 export class Agent {
   private openai: OpenAI;
   private modelName: string;
@@ -88,7 +93,8 @@ export class Agent {
       }
 
       /** LLM response message. */
-      const message = response.choices[0].message;
+      const message = response.choices[0]
+        .message as ReasoningChatCompletionMessage;
 
       // Update messages list
       this.messages.push(message);

@@ -7,7 +7,7 @@ import { config } from "../../utils";
 const PYTHON_EXECUTION_TIMEOUT = 30000;
 
 export const runPython = new StandaloneTool({
-  name: "runPython",
+  name: "run_python",
   description:
     "Executes Python code inside a sandboxed Docker container. The container is ephemeral and wiped after execution. Use this for math, data manipulation, and complex logic. Use print() to see the output.",
   zodSchema: z.object({

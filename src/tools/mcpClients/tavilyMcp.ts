@@ -5,7 +5,7 @@ import { config } from "../../utils";
 export const tavilyMcp = new MCPClient({
   name: "tavily",
   command: "npx",
-  args: ["-y", "tavily-mcp@latest "],
+  args: ["-y", "tavily-mcp@latest"],
   env: {
     TAVILY_API_KEY: config.tavilyApiKey,
     HTTP_PROXY: config.proxyUrl,
