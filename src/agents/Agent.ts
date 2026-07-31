@@ -46,7 +46,7 @@ export class Agent {
 
   private checkForInit() {
     if (!this.isInitialized) {
-      throw new Error("Please call the init method befor using the agent");
+      throw new Error("Please call the init method before using the agent");
     }
   }
 
