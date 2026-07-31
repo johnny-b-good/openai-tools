@@ -20,10 +20,11 @@ export const config = {
   openaiBaseUrl: process.env.OPENAI_BASE_URL ?? NOT_SET,
   openaiApiKey: process.env.OPENAI_API_KEY ?? NOT_SET,
 
-  filesystemAccessRoot: process.env.FILESYSTEM_ACCESS_ROOT ?? NOT_SET,
-
   enabledTools: getArrayValue(process.env.ENABLED_TOOLS),
   enabledMcps: getArrayValue(process.env.ENABLED_MCPS),
+
+  filesystemAccessRoot: process.env.FILESYSTEM_ACCESS_ROOT ?? NOT_SET,
+  pythonDockerImageTag: process.env.PYTHON_DOCKER_IMAGE_TAG ?? NOT_SET,
 };
 
 for (const [key, value] of Object.entries(config)) {
