@@ -67,6 +67,10 @@ export class ToolRouter {
       this.toolsSchemas.push(tool.toolSchema);
       this.toolProviderMap.set(tool.name, { type: "standalone", tool });
     }
+
+    logger.info(
+      `Enabled tools: ${Array.from(this.toolProviderMap.keys()).join(", ")}`,
+    );
   }
 
   async disconnectAll() {

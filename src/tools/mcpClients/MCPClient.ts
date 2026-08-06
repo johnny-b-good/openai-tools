@@ -28,7 +28,7 @@ export class MCPClient {
     this.command = command;
     this.args = args;
     this.mcp = new Client({
-      name: "mcp-client-cli",
+      name: this.name,
       version: "1.0.0",
     });
     this.env = env;
