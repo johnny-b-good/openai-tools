@@ -23,7 +23,7 @@ export const config = {
   enabledTools: getArrayValue(process.env.ENABLED_TOOLS),
   enabledMcps: getArrayValue(process.env.ENABLED_MCPS),
 
-  filesystemAccessRoot: process.env.FILESYSTEM_ACCESS_ROOT ?? NOT_SET,
+  workingDirectory: process.env.WORKING_DIRECTORY ?? NOT_SET,
   pythonDockerImageTag: process.env.PYTHON_DOCKER_IMAGE_TAG ?? NOT_SET,
   tavilyApiKey: process.env.TAVILY_API_KEY ?? NOT_SET,
   proxyUrl: process.env.PROXY_URL ?? NOT_SET,

@@ -12,6 +12,7 @@ const main = async () => {
     modelName: config.openaiModel,
     systemPrompt: simpleSystemPromptTemplate({
       currentTime: new Date().toLocaleString(),
+      workingDirectory: config.workingDirectory,
     }),
     toolRouter: new ToolRouter({
       enabledMcps: config.enabledMcps,

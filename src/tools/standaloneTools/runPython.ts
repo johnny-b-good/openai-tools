@@ -5,11 +5,12 @@ import { StandaloneTool } from "./StandaloneTool";
 import { config } from "../../utils";
 
 const PYTHON_EXECUTION_TIMEOUT = 30000;
+const CONTAINER_WORKDIR = "/data";
 
 export const runPython = new StandaloneTool({
   name: "run_python",
   description:
-    "Executes Python code inside a sandboxed Docker container. The container is ephemeral and wiped after execution. Use this for math, data manipulation, and complex logic. Use print() to see the output.",
+    "Executes Python code inside a sandboxed Docker container. The container is ephemeral and wiped after execution. Use this for math, data manipulation, and complex logic. Use print() to see the output. The working directory is mounted is mounted as /data.",
   zodSchema: z.object({
     code: z.string().describe("The Python code to execute."),
   }),
@@ -17,6 +18,10 @@ export const runPython = new StandaloneTool({
     return new Promise((resolve) => {
       const docker = spawn("docker", [
         "run",
+        "--mount",
+        `type=bind,source=${config.workingDirectory},target=/${CONTAINER_WORKDIR}`,
+        "--workdir",
+        CONTAINER_WORKDIR,
         "--rm",
         "-i",
         config.pythonDockerImageTag,
