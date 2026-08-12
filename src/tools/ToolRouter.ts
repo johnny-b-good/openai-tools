@@ -46,7 +46,7 @@ export class ToolRouter {
       `Enabled MCP clients: ${enabledMcps.length > 0 ? enabledMcps.join(", ") : "<NONE>"}`,
     );
     logger.info(
-      `Enabled tools: ${enabledTools.length > 0 ? enabledTools.join(", ") : "<NONE>"}`,
+      `Enabled standalone tools: ${enabledTools.length > 0 ? enabledTools.join(", ") : "<NONE>"}`,
     );
   }
 
@@ -69,7 +69,7 @@ export class ToolRouter {
     }
 
     logger.info(
-      `Enabled tools: ${Array.from(this.toolProviderMap.keys()).join(", ")}`,
+      `All enabled tools: ${Array.from(this.toolProviderMap.keys()).join(", ")}`,
     );
   }
 

@@ -27,6 +27,15 @@ export const config = {
   pythonDockerImageTag: process.env.PYTHON_DOCKER_IMAGE_TAG ?? NOT_SET,
   tavilyApiKey: process.env.TAVILY_API_KEY ?? NOT_SET,
   proxyUrl: process.env.PROXY_URL ?? NOT_SET,
+
+  ADVANCED_FETCH_FILE_STORAGE_PATH:
+    process.env.ADVANCED_FETCH_FILE_STORAGE_PATH ?? NOT_SET,
+  ADVANCED_FETCH_BROWSER_TYPE:
+    process.env.ADVANCED_FETCH_BROWSER_TYPE ?? NOT_SET,
+  ADVANCED_FETCH_BROWSER_BIN_PATH:
+    process.env.ADVANCED_FETCH_BROWSER_BIN_PATH ?? NOT_SET,
+  ADVANCED_FETCH_BROWSER_DATA_PATH:
+    process.env.ADVANCED_FETCH_BROWSER_DATA_PATH ?? NOT_SET,
 };
 
 for (const [key, value] of Object.entries(config)) {
