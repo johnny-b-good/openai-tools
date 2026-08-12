@@ -11,6 +11,7 @@ const makeTemplate = <T>(filename: string) => {
   return Handlebars.compile<T>(templateStr);
 };
 
-export const simpleSystemPromptTemplate = makeTemplate(
-  "simpleSystemPrompt.hbs",
-);
+export const simpleSystemPromptTemplate = makeTemplate<{
+  currentTime: string;
+  workingDirectory: string;
+}>("simpleSystemPrompt.hbs");

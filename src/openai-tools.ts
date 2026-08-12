@@ -10,7 +10,10 @@ const main = async () => {
   const agent = new Agent({
     openai,
     modelName: config.openaiModel,
-    systemPrompt: simpleSystemPromptTemplate({}),
+    systemPrompt: simpleSystemPromptTemplate({
+      currentTime: new Date().toLocaleString(),
+      workingDirectory: config.workingDirectory,
+    }),
     toolRouter: new ToolRouter({
       enabledMcps: config.enabledMcps,
       enabledTools: config.enabledTools,

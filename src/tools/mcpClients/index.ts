@@ -1,10 +1,12 @@
-export { MCPClient } from "./MCPClient";
-
-import { chromeMcp } from "./chromeMcp";
-import { filesystemMcp } from "./filesystemMcp";
 import type { MCPClient } from "./MCPClient";
+import { filesystemMcp } from "./filesystemMcp";
+import { tavilyMcp } from "./tavilyMcp";
+import { fetchMcp } from "./fetchMcp";
 
 export const allMcpClients: Record<string, MCPClient> = {
-  [chromeMcp.name]: chromeMcp,
   [filesystemMcp.name]: filesystemMcp,
+  [tavilyMcp.name]: tavilyMcp,
+  [fetchMcp.name]: fetchMcp,
 };
+
+export { MCPClient } from "./MCPClient";

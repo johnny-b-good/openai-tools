@@ -4,9 +4,14 @@ import { type MCPClient, allMcpClients } from "./mcpClients";
 import { allStandaloneTools, type AllStandaloneTools } from "./standaloneTools";
 import { logger } from "../utils";
 
+type ToolProvider =
+  | { type: "mcp"; client: MCPClient }
+  | { type: "standalone"; tool: AllStandaloneTools };
+
 export class ToolRouter {
   private mcpClients: Array<MCPClient>;
   private standaloneTools: Array<AllStandaloneTools>;
+  private toolProviderMap: Map<string, ToolProvider> = new Map();
 
   toolsSchemas: OpenAI.Chat.Completions.ChatCompletionFunctionTool[] = [];
 
@@ -41,7 +46,7 @@ export class ToolRouter {
       `Enabled MCP clients: ${enabledMcps.length > 0 ? enabledMcps.join(", ") : "<NONE>"}`,
     );
     logger.info(
-      `Enabled tools: ${enabledTools.length > 0 ? enabledTools.join(", ") : "<NONE>"}`,
+      `Enabled standalone tools: ${enabledTools.length > 0 ? enabledTools.join(", ") : "<NONE>"}`,
     );
   }
 
@@ -52,9 +57,20 @@ export class ToolRouter {
       .map((client) => client.toolsSchemas)
       .flat();
 
+    for (const client of this.mcpClients) {
+      for (const toolName of client.toolNames) {
+        this.toolProviderMap.set(toolName, { type: "mcp", client });
+      }
+    }
+
     for (const tool of this.standaloneTools) {
       this.toolsSchemas.push(tool.toolSchema);
+      this.toolProviderMap.set(tool.name, { type: "standalone", tool });
     }
+
+    logger.info(
+      `All enabled tools: ${Array.from(this.toolProviderMap.keys()).join(", ")}`,
+    );
   }
 
   async disconnectAll() {
@@ -62,18 +78,16 @@ export class ToolRouter {
   }
 
   async runTool(toolName: string, toolArgs: string): Promise<string> {
-    for (const client of this.mcpClients) {
-      if (client.toolNames.includes(toolName)) {
-        return await client.runTool(toolName, toolArgs);
-      }
+    const provider = this.toolProviderMap.get(toolName);
+
+    if (!provider) {
+      throw new Error(`Unknown tool provider for the tool "${toolName}"`);
     }
 
-    for (const tool of this.standaloneTools) {
-      if (tool.name === toolName) {
-        return await tool.runTool(toolArgs);
-      }
+    if (provider.type === "mcp") {
+      return await provider.client.runTool(toolName, toolArgs);
+    } else {
+      return await provider.tool.runTool(toolArgs);
     }
-
-    throw new Error(`Unknown tool provider for the tool "${toolName}"`);
   }
 }

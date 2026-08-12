@@ -8,6 +8,6 @@ export const filesystemMcp = new MCPClient({
   args: [
     "-y",
     "@modelcontextprotocol/server-filesystem@latest",
-    config.filesystemAccessRoot,
+    config.workingDirectory,
   ],
 });

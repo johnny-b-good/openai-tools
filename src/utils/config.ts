@@ -20,10 +20,22 @@ export const config = {
   openaiBaseUrl: process.env.OPENAI_BASE_URL ?? NOT_SET,
   openaiApiKey: process.env.OPENAI_API_KEY ?? NOT_SET,
 
-  filesystemAccessRoot: process.env.FILESYSTEM_ACCESS_ROOT ?? NOT_SET,
-
   enabledTools: getArrayValue(process.env.ENABLED_TOOLS),
   enabledMcps: getArrayValue(process.env.ENABLED_MCPS),
+
+  workingDirectory: process.env.WORKING_DIRECTORY ?? NOT_SET,
+  pythonDockerImageTag: process.env.PYTHON_DOCKER_IMAGE_TAG ?? NOT_SET,
+  tavilyApiKey: process.env.TAVILY_API_KEY ?? NOT_SET,
+  proxyUrl: process.env.PROXY_URL ?? NOT_SET,
+
+  ADVANCED_FETCH_FILE_STORAGE_PATH:
+    process.env.ADVANCED_FETCH_FILE_STORAGE_PATH ?? NOT_SET,
+  ADVANCED_FETCH_BROWSER_TYPE:
+    process.env.ADVANCED_FETCH_BROWSER_TYPE ?? NOT_SET,
+  ADVANCED_FETCH_BROWSER_BIN_PATH:
+    process.env.ADVANCED_FETCH_BROWSER_BIN_PATH ?? NOT_SET,
+  ADVANCED_FETCH_BROWSER_DATA_PATH:
+    process.env.ADVANCED_FETCH_BROWSER_DATA_PATH ?? NOT_SET,
 };
 
 for (const [key, value] of Object.entries(config)) {
