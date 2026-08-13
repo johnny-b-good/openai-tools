@@ -20,16 +20,19 @@ export class MCPClient {
   private mcp: Client;
   private transport: StdioClientTransport | null = null;
   private env?: Record<string, string>;
+  private allowedTools?: Array<string>;
 
   constructor({
     name,
     command,
     args,
+    allowedTools,
     env,
   }: {
     name: string;
     command: string;
     args: Array<string>;
+    allowedTools?: Array<string>;
     env?: Record<string, string>;
   }) {
     this.name = name;
@@ -39,6 +42,7 @@ export class MCPClient {
       name: this.name,
       version: "1.0.0",
     });
+    this.allowedTools = allowedTools;
     this.env = env;
   }
 
@@ -54,18 +58,22 @@ export class MCPClient {
 
       const toolsResult = await this.mcp.listTools();
 
-      this.toolsSchemas = toolsResult.tools.map((tool) => {
-        return {
+      for (const tool of toolsResult.tools) {
+        if (this.allowedTools && !this.allowedTools.includes(tool.name)) {
+          continue;
+        }
+
+        this.toolsSchemas.push({
           type: "function",
           function: {
             name: tool.name,
             description: tool.description,
             parameters: tool.inputSchema,
           },
-        };
-      });
+        });
 
-      this.toolNames = toolsResult.tools.map((tool) => tool.name);
+        this.toolNames.push(tool.name);
+      }
     } catch {
       throw new Error(`Failed to connect to MCP server ${this.name}`);
     }
