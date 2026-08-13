@@ -1,6 +1,14 @@
 import { Client } from "@modelcontextprotocol/sdk/client/index.js";
 import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
 import type OpenAI from "openai";
+import z from "zod";
+
+const MCPResponseContentSchema = z.array(
+  z.object({
+    type: z.literal("text"),
+    text: z.string(),
+  }),
+);
 
 export class MCPClient {
   name: string;
@@ -76,7 +84,15 @@ export class MCPClient {
       arguments: parsedToolArgs,
     });
 
-    return result.content as string;
+    const parsedResult = MCPResponseContentSchema.safeParse(result.content);
+    if (!parsedResult.success) {
+      throw new Error("Tool call returned content that couldn't be processed.");
+    } else {
+      return parsedResult.data
+        .map((r) => r.text)
+        .join("\n\n")
+        .trim();
+    }
   }
 
   async disconnect() {

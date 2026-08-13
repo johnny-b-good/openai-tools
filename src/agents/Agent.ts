@@ -1,9 +1,12 @@
 import OpenAI from "openai";
+import chalk from "chalk";
+import ora from "ora";
 
 import type { ToolRouter } from "../tools/ToolRouter";
-import { logger } from "../utils";
 
 const MAX_STEPS_NUMBER = 32;
+
+const spinner = ora("Thinking…");
 
 type ReasoningChatCompletionMessage =
   OpenAI.Chat.Completions.ChatCompletionMessage & {
@@ -40,6 +43,7 @@ export class Agent {
   }
 
   async init() {
+    this.logInit();
     await this.toolRouter.connectAll();
     this.isInitialized = true;
   }
@@ -68,6 +72,8 @@ export class Agent {
     while (stepNum < MAX_STEPS_NUMBER) {
       stepNum++;
 
+      spinner.start();
+
       /** LLM response object. */
       let response: OpenAI.Chat.Completions.ChatCompletion;
 
@@ -79,7 +85,7 @@ export class Agent {
         });
       } catch (err) {
         if (err instanceof OpenAI.APIError) {
-          logger.error(`API calling error: ${err.message}`);
+          this.logError("API calling error", err.message);
 
           this.messages.push({
             role: "system",
@@ -92,6 +98,8 @@ export class Agent {
         }
       }
 
+      spinner.stop();
+
       /** LLM response message. */
       const message = response.choices[0]
         .message as ReasoningChatCompletionMessage;
@@ -100,13 +108,13 @@ export class Agent {
       this.messages.push(message);
 
       if (message.reasoning_content) {
-        logger.info("Agent reasoning: %s", message.reasoning_content);
+        this.logInfo("Agent reasoning", message.reasoning_content.trim());
       }
 
       // If there were no tool calls then LLM has completed the task
       if (!message.tool_calls || message.tool_calls.length === 0) {
         const agentReply = message.content ?? "No response generated.";
-        logger.info("Agent reply: %s", agentReply);
+        this.logReply(agentReply.trim());
         return agentReply;
       }
 
@@ -117,7 +125,8 @@ export class Agent {
           const toolArguments = toolCall.function.arguments;
 
           // Log tool name and arguments
-          logger.info("Tool call: %s %s", toolName, toolArguments);
+          this.logInfo("Tool call", toolName);
+          this.logInfo("Tool args", toolArguments);
 
           // Execute tool, save it's results.
           try {
@@ -126,7 +135,7 @@ export class Agent {
               toolArguments,
             );
 
-            logger.info("Tool result: %s", toolResult);
+            this.logInfo("Tool result", toolResult);
 
             this.messages.push({
               role: "tool",
@@ -135,7 +144,7 @@ export class Agent {
             });
           } catch (err) {
             if (err instanceof Error) {
-              logger.warn("Tool error: %s %s", err.name, err.message);
+              this.logError("Tool error", err.message);
               this.messages.push({
                 role: "tool",
                 content: `Tool call error: ${err.name}; ${err.message}`,
@@ -146,7 +155,7 @@ export class Agent {
             }
           }
         } else {
-          logger.warn("Unsupported tool type");
+          this.logError("Unsupported tool type", toolCall.type);
           this.messages.push({
             role: "tool",
             content: "Unsupported tool type",
@@ -161,5 +170,23 @@ export class Agent {
 
   async destroy() {
     await this.toolRouter.disconnectAll();
+  }
+
+  private logInit() {
+    console.log(chalk.grey(`○ ${chalk.bold("Initializing the agent")}`));
+  }
+
+  private logReply(message: string) {
+    console.log(`${chalk.green("●")} ${chalk.bold("Agent:")} ${message}`);
+  }
+
+  private logInfo(type: string, data?: string) {
+    const typeFmt = `${type}:`;
+    console.log(chalk.grey(`○ ${chalk.bold(typeFmt)} ${data}`));
+  }
+
+  private logError(type: string, data?: string) {
+    const typeFmt = `${type}:`;
+    console.log(chalk.red(`○ ${chalk.bold(typeFmt)} ${data}`));
   }
 }
