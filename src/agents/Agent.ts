@@ -108,6 +108,11 @@ export class Agent {
       const message = response.choices[0]
         .message as ReasoningChatCompletionMessage;
 
+      this.logInfo(
+        "Session tokens count",
+        response.usage?.total_tokens.toString() ?? "UNKNOWN",
+      );
+
       // Update messages list
       this.messages.push(message);
 
