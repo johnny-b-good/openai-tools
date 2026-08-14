@@ -1,7 +1,5 @@
 import "dotenv/config";
 
-import { logger } from "./logger";
-
 const NOT_SET = "__NOT_SET__";
 
 const getArrayValue = (envVar: string | undefined): Array<string> => {
@@ -16,6 +14,8 @@ const getArrayValue = (envVar: string | undefined): Array<string> => {
 };
 
 export const config = {
+  verbose: process.env.VERBOSE ?? NOT_SET,
+
   openaiModel: process.env.OPENAI_MODEL ?? NOT_SET,
   openaiBaseUrl: process.env.OPENAI_BASE_URL ?? NOT_SET,
   openaiApiKey: process.env.OPENAI_API_KEY ?? NOT_SET,
@@ -40,7 +40,7 @@ export const config = {
 
 for (const [key, value] of Object.entries(config)) {
   if (value === NOT_SET) {
-    logger.error(`Missing ${key} env variable`);
+    console.error(`Missing ${key} env variable`);
     process.exit(1);
   }
 }

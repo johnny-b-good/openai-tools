@@ -26,7 +26,7 @@ const main = async () => {
     let prompt: string;
     try {
       prompt = await input({
-        message: "Prompt:",
+        message: "User:",
       });
     } catch {
       await agent.destroy();

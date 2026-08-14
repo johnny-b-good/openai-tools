@@ -1,8 +1,9 @@
 import type OpenAI from "openai";
+import chalk from "chalk";
 
 import { type MCPClient, allMcpClients } from "./mcpClients";
 import { allStandaloneTools, type AllStandaloneTools } from "./standaloneTools";
-import { logger } from "../utils";
+import { config } from "../utils";
 
 type ToolProvider =
   | { type: "mcp"; client: MCPClient }
@@ -41,13 +42,6 @@ export class ToolRouter {
         throw new Error(`Unknown tool "${enabledTool}"`);
       }
     }
-
-    logger.info(
-      `Enabled MCP clients: ${enabledMcps.length > 0 ? enabledMcps.join(", ") : "<NONE>"}`,
-    );
-    logger.info(
-      `Enabled standalone tools: ${enabledTools.length > 0 ? enabledTools.join(", ") : "<NONE>"}`,
-    );
   }
 
   async connectAll() {
@@ -57,20 +51,40 @@ export class ToolRouter {
       .map((client) => client.toolsSchemas)
       .flat();
 
-    for (const client of this.mcpClients) {
-      for (const toolName of client.toolNames) {
-        this.toolProviderMap.set(toolName, { type: "mcp", client });
-      }
-    }
+    const displayedToolList: Array<{ provider: string; tools: Array<string> }> =
+      [];
+
+    displayedToolList.push({
+      provider: "standalone",
+      tools: this.standaloneTools.map((t) => t.name),
+    });
 
     for (const tool of this.standaloneTools) {
       this.toolsSchemas.push(tool.toolSchema);
       this.toolProviderMap.set(tool.name, { type: "standalone", tool });
     }
 
-    logger.info(
-      `All enabled tools: ${Array.from(this.toolProviderMap.keys()).join(", ")}`,
-    );
+    for (const client of this.mcpClients) {
+      displayedToolList.push({
+        provider: client.name,
+        tools: client.toolNames,
+      });
+      for (const toolName of client.toolNames) {
+        this.toolProviderMap.set(toolName, { type: "mcp", client });
+      }
+    }
+
+    if (config.verbose) {
+      const formattedToolList = displayedToolList.map(
+        ({ provider, tools }) => `- ${provider}: [${tools.join(", ")}]`,
+      );
+
+      console.log(
+        chalk.grey(
+          `○ ${chalk.bold("All enabled tools:")}\n${formattedToolList.join("\n")}`,
+        ),
+      );
+    }
   }
 
   async disconnectAll() {

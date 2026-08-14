@@ -1,6 +1,14 @@
-import { Client } from "@modelcontextprotocol/sdk/client/index.js";
-import { StdioClientTransport } from "@modelcontextprotocol/sdk/client/stdio.js";
+import { Client } from "@modelcontextprotocol/client";
+import { StdioClientTransport } from "@modelcontextprotocol/client/stdio";
 import type OpenAI from "openai";
+import z from "zod";
+
+const MCPResponseContentSchema = z.array(
+  z.object({
+    type: z.literal("text"),
+    text: z.string(),
+  }),
+);
 
 export class MCPClient {
   name: string;
@@ -12,16 +20,19 @@ export class MCPClient {
   private mcp: Client;
   private transport: StdioClientTransport | null = null;
   private env?: Record<string, string>;
+  private allowedTools?: Array<string>;
 
   constructor({
     name,
     command,
     args,
+    allowedTools,
     env,
   }: {
     name: string;
     command: string;
     args: Array<string>;
+    allowedTools?: Array<string>;
     env?: Record<string, string>;
   }) {
     this.name = name;
@@ -31,6 +42,7 @@ export class MCPClient {
       name: this.name,
       version: "1.0.0",
     });
+    this.allowedTools = allowedTools;
     this.env = env;
   }
 
@@ -46,18 +58,22 @@ export class MCPClient {
 
       const toolsResult = await this.mcp.listTools();
 
-      this.toolsSchemas = toolsResult.tools.map((tool) => {
-        return {
+      for (const tool of toolsResult.tools) {
+        if (this.allowedTools && !this.allowedTools.includes(tool.name)) {
+          continue;
+        }
+
+        this.toolsSchemas.push({
           type: "function",
           function: {
             name: tool.name,
             description: tool.description,
             parameters: tool.inputSchema,
           },
-        };
-      });
+        });
 
-      this.toolNames = toolsResult.tools.map((tool) => tool.name);
+        this.toolNames.push(tool.name);
+      }
     } catch {
       throw new Error(`Failed to connect to MCP server ${this.name}`);
     }
@@ -76,7 +92,15 @@ export class MCPClient {
       arguments: parsedToolArgs,
     });
 
-    return result.content as string;
+    const parsedResult = MCPResponseContentSchema.safeParse(result.content);
+    if (!parsedResult.success) {
+      throw new Error("Tool call returned content that couldn't be processed.");
+    } else {
+      return parsedResult.data
+        .map((r) => r.text)
+        .join("\n\n")
+        .trim();
+    }
   }
 
   async disconnect() {
