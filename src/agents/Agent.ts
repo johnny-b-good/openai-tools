@@ -6,7 +6,10 @@ import type { ToolRouter } from "../tools/ToolRouter";
 
 const MAX_STEPS_NUMBER = 32;
 
-const spinner = ora("Thinking…");
+const spinner = ora({
+  text: "Thinking",
+  spinner: "simpleDotsScrolling",
+});
 
 type ReasoningChatCompletionMessage =
   OpenAI.Chat.Completions.ChatCompletionMessage & {
