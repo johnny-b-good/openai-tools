@@ -3,6 +3,7 @@ import chalk from "chalk";
 import ora from "ora";
 
 import type { ToolRouter } from "../tools/ToolRouter";
+import { config } from "../utils";
 
 const MAX_STEPS_NUMBER = 32;
 
@@ -46,7 +47,7 @@ export class Agent {
   }
 
   async init() {
-    this.logInit();
+    this.logInfo("Initializing the agent");
     await this.toolRouter.connectAll();
     this.isInitialized = true;
   }
@@ -175,21 +176,19 @@ export class Agent {
     await this.toolRouter.disconnectAll();
   }
 
-  private logInit() {
-    console.log(chalk.grey(`○ ${chalk.bold("Initializing the agent")}`));
-  }
-
   private logReply(message: string) {
     console.log(`${chalk.green("●")} ${chalk.bold("Agent:")} ${message}`);
   }
 
   private logInfo(type: string, data?: string) {
-    const typeFmt = `${type}:`;
-    console.log(chalk.grey(`○ ${chalk.bold(typeFmt)} ${data}`));
+    if (config.verbose) {
+      const typeFmt = data ? `${type}: ` : type;
+      console.log(chalk.grey(`○ ${chalk.bold(typeFmt)}${data ?? ""}`));
+    }
   }
 
   private logError(type: string, data?: string) {
-    const typeFmt = `${type}:`;
-    console.log(chalk.red(`○ ${chalk.bold(typeFmt)} ${data}`));
+    const typeFmt = data ? `${type}: ` : type;
+    console.log(chalk.red(`○ ${chalk.bold(typeFmt)}${data ?? ""}`));
   }
 }
