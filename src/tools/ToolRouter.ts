@@ -16,32 +16,9 @@ export class ToolRouter {
 
   toolsSchemas: OpenAI.Chat.Completions.ChatCompletionFunctionTool[] = [];
 
-  constructor({
-    enabledMcps,
-    enabledTools,
-  }: {
-    enabledMcps: Array<string>;
-    enabledTools: Array<string>;
-  }) {
-    this.mcpClients = [];
-    for (const enabledMcp of enabledMcps) {
-      const mcp = allMcpClients[enabledMcp];
-      if (mcp) {
-        this.mcpClients.push(mcp);
-      } else {
-        throw new Error(`Unknown MCP "${enabledMcp}"`);
-      }
-    }
-
-    this.standaloneTools = [];
-    for (const enabledTool of enabledTools) {
-      const tool = allStandaloneTools[enabledTool];
-      if (tool) {
-        this.standaloneTools.push(tool);
-      } else {
-        throw new Error(`Unknown tool "${enabledTool}"`);
-      }
-    }
+  constructor() {
+    this.mcpClients = Object.values(allMcpClients);
+    this.standaloneTools = Object.values(allStandaloneTools);
   }
 
   async connectAll() {
@@ -74,7 +51,7 @@ export class ToolRouter {
       }
     }
 
-    if (config.verbose) {
+    if (config.VERBOSE) {
       const formattedToolList = displayedToolList.map(
         ({ provider, tools }) => `- ${provider}: [${tools.join(", ")}]`,
       );

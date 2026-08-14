@@ -7,9 +7,9 @@ export const tavilyMcp = new MCPClient({
   command: "npx",
   args: ["-y", "tavily-mcp@latest"],
   env: {
-    TAVILY_API_KEY: config.tavilyApiKey,
-    HTTP_PROXY: config.proxyUrl,
-    HTTPS_PROXY: config.proxyUrl,
+    TAVILY_API_KEY: config.TAVILY_API_KEY,
+    HTTP_PROXY: config.PROXY_URL,
+    HTTPS_PROXY: config.PROXY_URL,
   },
   allowedTools: ["tavily_search"],
 });

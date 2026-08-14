@@ -9,15 +9,12 @@ import { Agent } from "./agents";
 const main = async () => {
   const agent = new Agent({
     openai,
-    modelName: config.openaiModel,
+    modelName: config.OPENAI_MODEL,
     systemPrompt: simpleSystemPromptTemplate({
       currentTime: new Date().toLocaleString(),
-      workingDirectory: config.workingDirectory,
+      workingDirectory: config.WORKING_DIRECTORY,
     }),
-    toolRouter: new ToolRouter({
-      enabledMcps: config.enabledMcps,
-      enabledTools: config.enabledTools,
-    }),
+    toolRouter: new ToolRouter(),
   });
 
   await agent.init();

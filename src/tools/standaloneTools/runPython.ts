@@ -19,12 +19,12 @@ export const runPython = new StandaloneTool({
       const docker = spawn("docker", [
         "run",
         "--mount",
-        `type=bind,source=${config.workingDirectory},target=/${CONTAINER_WORKDIR}`,
+        `type=bind,source=${config.WORKING_DIRECTORY},target=/${CONTAINER_WORKDIR}`,
         "--workdir",
         CONTAINER_WORKDIR,
         "--rm",
         "-i",
-        config.pythonDockerImageTag,
+        config.PYTHON_DOCKER_IMAGE_TAG,
         "python",
         "-",
       ]);

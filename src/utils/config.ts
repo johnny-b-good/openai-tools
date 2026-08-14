@@ -1,46 +1,31 @@
 import "dotenv/config";
+import z from "zod";
 
-const NOT_SET = "__NOT_SET__";
+const envSchema = z.object({
+  VERBOSE: z.stringbool(),
 
-const getArrayValue = (envVar: string | undefined): Array<string> => {
-  if (typeof envVar === "string") {
-    return envVar
-      .split(",")
-      .map((item) => item.trim())
-      .filter((item) => item.length > 0);
-  } else {
-    return [];
-  }
-};
+  OPENAI_MODEL: z.string().min(1),
+  OPENAI_BASE_URL: z.string().min(1),
+  OPENAI_API_KEY: z.string().min(1),
 
-export const config = {
-  verbose: process.env.VERBOSE ?? NOT_SET,
+  WORKING_DIRECTORY: z.string().min(1),
+  PYTHON_DOCKER_IMAGE_TAG: z.string().min(1),
+  TAVILY_API_KEY: z.string().min(1),
+  PROXY_URL: z.string().min(1),
 
-  openaiModel: process.env.OPENAI_MODEL ?? NOT_SET,
-  openaiBaseUrl: process.env.OPENAI_BASE_URL ?? NOT_SET,
-  openaiApiKey: process.env.OPENAI_API_KEY ?? NOT_SET,
+  FETCH_FILE_STORAGE_PATH: z.string().min(1),
+  FETCH_BROWSER_TYPE: z.enum(["chrome", "firefox"]),
+  FETCH_BROWSER_BIN_PATH: z.string().min(1),
+  FETCH_BROWSER_DATA_PATH: z.string().min(1),
+});
 
-  enabledTools: getArrayValue(process.env.ENABLED_TOOLS),
-  enabledMcps: getArrayValue(process.env.ENABLED_MCPS),
-
-  workingDirectory: process.env.WORKING_DIRECTORY ?? NOT_SET,
-  pythonDockerImageTag: process.env.PYTHON_DOCKER_IMAGE_TAG ?? NOT_SET,
-  tavilyApiKey: process.env.TAVILY_API_KEY ?? NOT_SET,
-  proxyUrl: process.env.PROXY_URL ?? NOT_SET,
-
-  ADVANCED_FETCH_FILE_STORAGE_PATH:
-    process.env.ADVANCED_FETCH_FILE_STORAGE_PATH ?? NOT_SET,
-  ADVANCED_FETCH_BROWSER_TYPE:
-    process.env.ADVANCED_FETCH_BROWSER_TYPE ?? NOT_SET,
-  ADVANCED_FETCH_BROWSER_BIN_PATH:
-    process.env.ADVANCED_FETCH_BROWSER_BIN_PATH ?? NOT_SET,
-  ADVANCED_FETCH_BROWSER_DATA_PATH:
-    process.env.ADVANCED_FETCH_BROWSER_DATA_PATH ?? NOT_SET,
-};
-
-for (const [key, value] of Object.entries(config)) {
-  if (value === NOT_SET) {
-    console.error(`Missing ${key} env variable`);
-    process.exit(1);
-  }
+const result = envSchema.safeParse(process.env);
+if (!result.success) {
+  console.error(
+    "Error: invalid environment variables:\n",
+    z.prettifyError(result.error),
+  );
+  process.exit(1);
 }
+
+export const config = result.data;

@@ -8,7 +8,7 @@ export const filesystemMcp = new MCPClient({
   args: [
     "-y",
     "@modelcontextprotocol/server-filesystem@latest",
-    config.workingDirectory,
+    config.WORKING_DIRECTORY,
   ],
   allowedTools: [
     "read_text_file",

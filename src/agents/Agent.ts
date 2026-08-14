@@ -181,7 +181,7 @@ export class Agent {
   }
 
   private logInfo(type: string, data?: string) {
-    if (config.verbose) {
+    if (config.VERBOSE) {
       const typeFmt = data ? `${type}: ` : type;
       console.log(chalk.grey(`○ ${chalk.bold(typeFmt)}${data ?? ""}`));
     }
