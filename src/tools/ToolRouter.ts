@@ -3,6 +3,7 @@ import chalk from "chalk";
 
 import { type MCPClient, allMcpClients } from "./mcpClients";
 import { allStandaloneTools, type AllStandaloneTools } from "./standaloneTools";
+import { config } from "../utils";
 
 type ToolProvider =
   | { type: "mcp"; client: MCPClient }
@@ -73,15 +74,17 @@ export class ToolRouter {
       }
     }
 
-    const formattedToolList = displayedToolList.map(
-      ({ provider, tools }) => `- ${provider}: [${tools.join(", ")}]`,
-    );
+    if (config.verbose) {
+      const formattedToolList = displayedToolList.map(
+        ({ provider, tools }) => `- ${provider}: [${tools.join(", ")}]`,
+      );
 
-    console.log(
-      chalk.grey(
-        `○ ${chalk.bold("All enabled tools:")}\n${formattedToolList.join("\n")}`,
-      ),
-    );
+      console.log(
+        chalk.grey(
+          `○ ${chalk.bold("All enabled tools:")}\n${formattedToolList.join("\n")}`,
+        ),
+      );
+    }
   }
 
   async disconnectAll() {

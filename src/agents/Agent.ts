@@ -9,7 +9,7 @@ const MAX_STEPS_NUMBER = 32;
 
 const spinner = ora({
   text: "Thinking",
-  spinner: "simpleDotsScrolling",
+  spinner: "dots13",
 });
 
 type ReasoningChatCompletionMessage =
