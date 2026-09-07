@@ -9,6 +9,7 @@ const envSchema = z.object({
   OPENAI_API_KEY: z.string().min(1),
 
   WORKING_DIRECTORY: z.string().min(1),
+  EXTRA_SYSTEM_PROMPT: z.string().min(1),
   PYTHON_DOCKER_IMAGE_TAG: z.string().min(1),
   TAVILY_API_KEY: z.string().min(1),
   PROXY_URL: z.string().min(1),
