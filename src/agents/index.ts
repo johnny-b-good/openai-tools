@@ -1,1 +1,1 @@
-export { Agent } from "./Agent";
+export { Agent, type AgentMessages } from "./Agent";

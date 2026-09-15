@@ -1,9 +1,7 @@
 import type OpenAI from "openai";
-import chalk from "chalk";
 
 import { type MCPClient, allMcpClients } from "./mcpClients";
 import { allStandaloneTools, type AllStandaloneTools } from "./standaloneTools";
-import { config } from "../utils";
 
 type ToolProvider =
   | { type: "mcp"; client: MCPClient }
@@ -14,7 +12,12 @@ export class ToolRouter {
   private standaloneTools: Array<AllStandaloneTools>;
   private toolProviderMap: Map<string, ToolProvider> = new Map();
 
-  toolsSchemas: OpenAI.Chat.Completions.ChatCompletionFunctionTool[] = [];
+  public readonly enabledTools: Array<{
+    provider: string;
+    tools: Array<string>;
+  }> = [];
+  public readonly toolsSchemas: OpenAI.Chat.Completions.ChatCompletionFunctionTool[] =
+    [];
 
   constructor() {
     this.mcpClients = Object.values(allMcpClients);
@@ -24,43 +27,27 @@ export class ToolRouter {
   async connectAll() {
     await Promise.all(this.mcpClients.map((client) => client.connect()));
 
-    this.toolsSchemas = this.mcpClients
-      .map((client) => client.toolsSchemas)
-      .flat();
-
-    const displayedToolList: Array<{ provider: string; tools: Array<string> }> =
-      [];
-
-    displayedToolList.push({
-      provider: "standalone",
-      tools: this.standaloneTools.map((t) => t.name),
-    });
-
+    const standaloneToolNames: Array<string> = [];
     for (const tool of this.standaloneTools) {
       this.toolsSchemas.push(tool.toolSchema);
       this.toolProviderMap.set(tool.name, { type: "standalone", tool });
+      standaloneToolNames.push(tool.name);
     }
+    this.enabledTools.push({
+      provider: "standalone",
+      tools: standaloneToolNames,
+    });
 
     for (const client of this.mcpClients) {
-      displayedToolList.push({
-        provider: client.name,
-        tools: client.toolNames,
-      });
+      for (const toolSchema of client.toolsSchemas) {
+        this.toolsSchemas.push(toolSchema);
+      }
+      const toolNames: Array<string> = [];
       for (const toolName of client.toolNames) {
+        toolNames.push(toolName);
         this.toolProviderMap.set(toolName, { type: "mcp", client });
       }
-    }
-
-    if (config.VERBOSE) {
-      const formattedToolList = displayedToolList.map(
-        ({ provider, tools }) => `- ${provider}: [${tools.join(", ")}]`,
-      );
-
-      console.log(
-        chalk.grey(
-          `○ ${chalk.bold("All enabled tools:")}\n${formattedToolList.join("\n")}`,
-        ),
-      );
+      this.enabledTools.push({ provider: client.name, tools: toolNames });
     }
   }
 

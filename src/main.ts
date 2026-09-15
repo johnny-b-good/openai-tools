@@ -1,12 +1,10 @@
 import fs from "node:fs/promises";
 
-import OpenAI from "openai";
-
 import { config } from "./utils";
 import { systemPromptTemplate } from "./templates";
 import { openai } from "./consts.ts";
 import { ToolRouter } from "./tools";
-import { Agent } from "./agents";
+import { Agent, type AgentMessages } from "./agents";
 import { TUI } from "./tui";
 
 const main = async () => {
@@ -21,7 +19,7 @@ const main = async () => {
     extraSystemPrompt,
   });
 
-  const messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [
+  const messages: AgentMessages = [
     {
       role: "system",
       content: systemPrompt,
@@ -34,9 +32,9 @@ const main = async () => {
     toolRouter: new ToolRouter(),
   });
 
-  await agent.init();
-
   const tui = new TUI({ agent, messages });
+
+  await agent.init();
 
   try {
     await tui.run();

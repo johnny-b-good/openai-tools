@@ -1,16 +1,20 @@
+import EventEmitter from "node:events";
+
 import OpenAI from "openai";
-import chalk from "chalk";
-import ora from "ora";
 
 import type { ToolRouter } from "../tools/ToolRouter";
-import { config } from "../utils";
 
 const MAX_STEPS_NUMBER = 32;
 
-const spinner = ora({
-  text: "Thinking",
-  spinner: "dots13",
-});
+const ERR_API_CALL_FAILED = "ERR_API_CALL_FAILED";
+const ERR_MAX_STEP_REACHED = "ERR_MAX_STEP_REACHED";
+
+export type AgentMessages =
+  OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+
+export type AgentReply =
+  | { status: "ok"; reply: string }
+  | { status: "error"; code: string; data?: string };
 
 type ReasoningChatCompletionMessage =
   OpenAI.Chat.Completions.ChatCompletionMessage & {
@@ -22,6 +26,13 @@ export class Agent {
   private modelName: string;
   private toolRouter: ToolRouter;
   private isInitialized: boolean = false;
+  public events: EventEmitter<{
+    reply: [msg: string];
+    info: [msg: string, data?: string];
+    error: [msg: string, data?: string];
+    startThinking: [];
+    stopThinking: [];
+  }>;
 
   constructor({
     openai,
@@ -35,12 +46,23 @@ export class Agent {
     this.openai = openai;
     this.modelName = modelName;
     this.toolRouter = toolRouter;
+    this.events = new EventEmitter();
   }
 
   async init() {
     this.logInfo("Initializing the agent");
+
     await this.toolRouter.connectAll();
+
     this.isInitialized = true;
+
+    const formattedToolList = this.toolRouter.enabledTools.map(
+      ({ provider, tools }) => `- ${provider}: [${tools.join(", ")}]`,
+    );
+
+    this.logInfo("All enabled tools", `\n${formattedToolList.join("\n")}`);
+
+    this.logInfo("Agent initialized");
   }
 
   private checkForInit() {
@@ -50,9 +72,7 @@ export class Agent {
   }
 
   /** Run acting step. */
-  async run(
-    messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
-  ): Promise<string> {
+  async run(messages: AgentMessages): Promise<AgentReply> {
     this.checkForInit();
 
     let stepNum = 0;
@@ -60,7 +80,7 @@ export class Agent {
     while (stepNum < MAX_STEPS_NUMBER) {
       stepNum++;
 
-      spinner.start();
+      this.startThinking();
 
       /** LLM response object. */
       let response: OpenAI.Chat.Completions.ChatCompletion;
@@ -72,21 +92,18 @@ export class Agent {
           tools: this.toolRouter.toolsSchemas,
         });
       } catch (err) {
-        if (err instanceof OpenAI.APIError) {
-          this.logError("API calling error", err.message);
+        const errMessage = err instanceof Error ? err.message : undefined;
 
-          messages.push({
-            role: "system",
-            content: `API calling error: ${err.message}`,
-          });
+        this.logError("Failed to call LLM API", errMessage);
 
-          continue;
-        } else {
-          throw err;
-        }
+        return {
+          status: "error",
+          code: ERR_API_CALL_FAILED,
+          data: errMessage,
+        };
+      } finally {
+        this.stopThinking();
       }
-
-      spinner.stop();
 
       /** LLM response message. */
       const message = response.choices[0]
@@ -106,9 +123,9 @@ export class Agent {
 
       // If there were no tool calls then LLM has completed the task
       if (!message.tool_calls || message.tool_calls.length === 0) {
-        const agentReply = message.content ?? "No response generated.";
-        this.logReply(agentReply.trim());
-        return agentReply;
+        const agentReply = message.content?.trim() ?? "No response generated.";
+        this.logReply(agentReply);
+        return { status: "ok", reply: agentReply };
       }
 
       // Run tool calls
@@ -129,7 +146,6 @@ export class Agent {
             );
 
             this.logInfo("Tool result", toolResult);
-
             messages.push({
               role: "tool",
               content: toolResult,
@@ -137,10 +153,10 @@ export class Agent {
             });
           } catch (err) {
             if (err instanceof Error) {
-              this.logError("Tool error", err.message);
+              this.logError("Tool call error", err.message);
               messages.push({
                 role: "tool",
-                content: `Tool call error: ${err.name}; ${err.message}`,
+                content: `Tool call error: ${err.message}`,
                 tool_call_id: toolCall.id,
               });
             } else {
@@ -148,17 +164,21 @@ export class Agent {
             }
           }
         } else {
-          this.logError("Unsupported tool type", toolCall.type);
+          this.logError(
+            "Tool call error: Unsupported tool type",
+            toolCall.type,
+          );
           messages.push({
             role: "tool",
-            content: "Unsupported tool type",
+            content: `Tool call error: Unsupported tool type ${toolCall.type}`,
             tool_call_id: toolCall.id,
           });
         }
       }
     }
 
-    return "Error: maximum step number reached";
+    this.logError("Maximum number of steps reached");
+    return { status: "error", code: ERR_MAX_STEP_REACHED };
   }
 
   async destroy() {
@@ -166,18 +186,22 @@ export class Agent {
   }
 
   private logReply(msg: string) {
-    console.log(`${chalk.green("●")} ${chalk.bold("Agent:")} ${msg}`);
+    this.events.emit("reply", msg);
   }
 
   private logInfo(msg: string, data?: string) {
-    if (config.VERBOSE) {
-      const msgFmt = data ? `${msg}: ` : msg;
-      console.log(chalk.grey(`○ ${chalk.bold(msgFmt)}${data ?? ""}`));
-    }
+    this.events.emit("info", msg, data);
   }
 
   private logError(msg: string, data?: string) {
-    const msgFmt = data ? `${msg}: ` : msg;
-    console.log(chalk.red(`○ ${chalk.bold(msgFmt)}${data ?? ""}`));
+    this.events.emit("error", msg, data);
+  }
+
+  private startThinking() {
+    this.events.emit("startThinking");
+  }
+
+  private stopThinking() {
+    this.events.emit("stopThinking");
   }
 }

@@ -1,23 +1,30 @@
-import OpenAI from "openai";
+import chalk from "chalk";
+import ora from "ora";
 import { input, select } from "@inquirer/prompts";
 
-import { Agent } from "../agents";
+import { Agent, type AgentMessages } from "../agents";
+import { config } from "../utils";
 
 type Command = "save" | "load" | "regenerate" | "undo" | "cancel";
 
+const spinner = ora({
+  text: "Thinking",
+  spinner: "dots13",
+});
+
 export class TUI {
   private agent: Agent;
-  private messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
+  private messages: AgentMessages;
 
-  constructor({
-    agent,
-    messages,
-  }: {
-    agent: Agent;
-    messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[];
-  }) {
+  constructor({ agent, messages }: { agent: Agent; messages: AgentMessages }) {
     this.agent = agent;
     this.messages = messages;
+
+    this.agent.events.on("reply", this.logReply);
+    this.agent.events.on("info", this.logInfo);
+    this.agent.events.on("error", this.logError);
+    this.agent.events.on("startThinking", this.startThinking);
+    this.agent.events.on("stopThinking", this.stopThinking);
   }
 
   async run() {
@@ -77,5 +84,29 @@ export class TUI {
   // TODO
   private async onRegenerate() {
     console.log("onRegenerate");
+  }
+
+  private logReply(msg: string) {
+    console.log(`${chalk.green("●")} ${chalk.bold("Agent:")} ${msg}`);
+  }
+
+  private logInfo(msg: string, data?: string) {
+    if (config.VERBOSE) {
+      const msgFmt = data ? `${msg}: ` : msg;
+      console.log(chalk.grey(`○ ${chalk.bold(msgFmt)}${data ?? ""}`));
+    }
+  }
+
+  private logError(msg: string, data?: string) {
+    const msgFmt = data ? `${msg}: ` : msg;
+    console.log(chalk.red(`○ ${chalk.bold(msgFmt)}${data ?? ""}`));
+  }
+
+  private startThinking() {
+    spinner.start();
+  }
+
+  private stopThinking() {
+    spinner.stop();
   }
 }
