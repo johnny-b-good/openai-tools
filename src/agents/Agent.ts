@@ -21,29 +21,20 @@ export class Agent {
   private openai: OpenAI;
   private modelName: string;
   private toolRouter: ToolRouter;
-  private messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[] = [];
   private isInitialized: boolean = false;
 
   constructor({
     openai,
     modelName,
-    systemPrompt,
     toolRouter,
   }: {
     openai: OpenAI;
     modelName: string;
-    systemPrompt: string;
     toolRouter: ToolRouter;
   }) {
     this.openai = openai;
     this.modelName = modelName;
     this.toolRouter = toolRouter;
-    this.messages = [
-      {
-        role: "system",
-        content: systemPrompt,
-      },
-    ];
   }
 
   async init() {
@@ -58,17 +49,10 @@ export class Agent {
     }
   }
 
-  pushUserMessage(msg: string) {
-    this.checkForInit();
-
-    this.messages.push({
-      role: "user",
-      content: msg,
-    });
-  }
-
   /** Run acting step. */
-  async run(): Promise<string> {
+  async run(
+    messages: OpenAI.Chat.Completions.ChatCompletionMessageParam[],
+  ): Promise<string> {
     this.checkForInit();
 
     let stepNum = 0;
@@ -84,14 +68,14 @@ export class Agent {
       try {
         response = await this.openai.chat.completions.create({
           model: this.modelName,
-          messages: this.messages,
+          messages: messages,
           tools: this.toolRouter.toolsSchemas,
         });
       } catch (err) {
         if (err instanceof OpenAI.APIError) {
           this.logError("API calling error", err.message);
 
-          this.messages.push({
+          messages.push({
             role: "system",
             content: `API calling error: ${err.message}`,
           });
@@ -114,7 +98,7 @@ export class Agent {
       );
 
       // Update messages list
-      this.messages.push(message);
+      messages.push(message);
 
       if (message.reasoning_content) {
         this.logInfo("Agent reasoning", message.reasoning_content.trim());
@@ -146,7 +130,7 @@ export class Agent {
 
             this.logInfo("Tool result", toolResult);
 
-            this.messages.push({
+            messages.push({
               role: "tool",
               content: toolResult,
               tool_call_id: toolCall.id,
@@ -154,7 +138,7 @@ export class Agent {
           } catch (err) {
             if (err instanceof Error) {
               this.logError("Tool error", err.message);
-              this.messages.push({
+              messages.push({
                 role: "tool",
                 content: `Tool call error: ${err.name}; ${err.message}`,
                 tool_call_id: toolCall.id,
@@ -165,7 +149,7 @@ export class Agent {
           }
         } else {
           this.logError("Unsupported tool type", toolCall.type);
-          this.messages.push({
+          messages.push({
             role: "tool",
             content: "Unsupported tool type",
             tool_call_id: toolCall.id,
@@ -181,19 +165,19 @@ export class Agent {
     await this.toolRouter.disconnectAll();
   }
 
-  private logReply(message: string) {
-    console.log(`${chalk.green("●")} ${chalk.bold("Agent:")} ${message}`);
+  private logReply(msg: string) {
+    console.log(`${chalk.green("●")} ${chalk.bold("Agent:")} ${msg}`);
   }
 
-  private logInfo(type: string, data?: string) {
+  private logInfo(msg: string, data?: string) {
     if (config.VERBOSE) {
-      const typeFmt = data ? `${type}: ` : type;
-      console.log(chalk.grey(`○ ${chalk.bold(typeFmt)}${data ?? ""}`));
+      const msgFmt = data ? `${msg}: ` : msg;
+      console.log(chalk.grey(`○ ${chalk.bold(msgFmt)}${data ?? ""}`));
     }
   }
 
-  private logError(type: string, data?: string) {
-    const typeFmt = data ? `${type}: ` : type;
-    console.log(chalk.red(`○ ${chalk.bold(typeFmt)}${data ?? ""}`));
+  private logError(msg: string, data?: string) {
+    const msgFmt = data ? `${msg}: ` : msg;
+    console.log(chalk.red(`○ ${chalk.bold(msgFmt)}${data ?? ""}`));
   }
 }
