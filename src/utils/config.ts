@@ -18,6 +18,10 @@ const envSchema = z.object({
   FETCH_BROWSER_TYPE: z.enum(["chrome", "firefox"]),
   FETCH_BROWSER_BIN_PATH: z.string().min(1),
   FETCH_BROWSER_DATA_PATH: z.string().min(1),
+
+  NOTIFICATION_APP_NAME: z.string().min(1),
+  NOTIFICATION_APP_DESKTOP_ENTRY: z.string().min(1),
+  NOTIFICATION_TIMEOUT: z.string().min(1),
 });
 
 const result = envSchema.safeParse(process.env);
