@@ -11,5 +11,5 @@ export const tavilyMcp = new MCPClient({
     HTTP_PROXY: config.PROXY_URL,
     HTTPS_PROXY: config.PROXY_URL,
   },
-  allowedTools: ["tavily_search"],
+  allowedTools: ["tavily_search", "tavily_extract"],
 });

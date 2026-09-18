@@ -16,10 +16,8 @@ export const filesystemMcp = new MCPClient({
     "write_file",
     "create_directory",
     "list_directory",
-    "list_directory_with_sizes",
     "move_file",
     "search_files",
     "get_file_info",
-    "list_allowed_directories",
   ],
 });
