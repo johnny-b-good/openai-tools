@@ -22,6 +22,22 @@ const envSchema = z.object({
   NOTIFICATION_APP_NAME: z.string().min(1),
   NOTIFICATION_APP_DESKTOP_ENTRY: z.string().min(1),
   NOTIFICATION_TIMEOUT: z.string().min(1),
+
+  SMTP_HOST: z.string().min(1),
+  SMTP_PORT: z.coerce.number(),
+  SMTP_SECURE: z.stringbool(),
+
+  IMAP_HOST: z.string().min(1),
+  IMAP_PORT: z.coerce.number(),
+  IMAP_SECURE: z.stringbool(),
+
+  USER_NAME: z.string().min(1),
+  PASSWORD: z.string().min(1),
+
+  SENDER_NAME: z.string().min(1),
+  SENDER_EMAIL: z.string().min(1),
+
+  LAST_MESSAGES_NUM: z.coerce.number(),
 });
 
 const result = envSchema.safeParse(process.env);
