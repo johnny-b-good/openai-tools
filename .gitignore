@@ -5,3 +5,6 @@ node_modules/
 prompts/
 assets/
 .npmrc
+
+todos/
+configs/

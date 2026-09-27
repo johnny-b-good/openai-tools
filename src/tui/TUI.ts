@@ -1,6 +1,7 @@
 import chalk from "chalk";
 import ora from "ora";
 import { input, select } from "@inquirer/prompts";
+import boxen, { type Options as BoxenOptions } from "boxen";
 
 import { Agent, type AgentMessages } from "../agents";
 import { config } from "../utils";
@@ -11,6 +12,14 @@ const spinner = ora({
   text: "Thinking",
   spinner: "dots13",
 });
+
+const commonBoxenOptions: BoxenOptions = {
+  titleAlignment: "left",
+  maxWidth: 80,
+  margin: 0,
+  padding: 1,
+  dimBorder: true,
+};
 
 export class TUI {
   private agent: Agent;
@@ -29,15 +38,22 @@ export class TUI {
 
   async run() {
     while (true) {
-      // TODO:
-      const prompt = await input({
-        message: "User:",
-      });
+      const prompt = await input(
+        {
+          message: "User:",
+        },
+        {
+          clearPromptOnDone: true,
+        },
+      );
+
+      this.logPrompt(prompt);
 
       if (prompt === "") {
         const command = await select<Command>({
           message: "Select a command",
-          choices: ["save", "load", "regenerate", "undo", "cancel"],
+          choices: ["cancel", "save", "load", "regenerate", "undo"],
+          default: "cancel",
         });
 
         if (command === "save") {
@@ -86,8 +102,24 @@ export class TUI {
     console.log("onRegenerate");
   }
 
+  private logPrompt(msg: string) {
+    console.log(
+      boxen(msg, {
+        ...commonBoxenOptions,
+        title: config.USER_NAME,
+        borderColor: "green",
+      }),
+    );
+  }
+
   private logReply(msg: string) {
-    console.log(`${chalk.green("●")} ${chalk.bold("Agent:")} ${msg}`);
+    console.log(
+      boxen(msg, {
+        ...commonBoxenOptions,
+        title: config.AGENT_NAME,
+        borderColor: "cyan",
+      }),
+    );
   }
 
   private logInfo(msg: string, data?: string) {

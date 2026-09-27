@@ -4,6 +4,9 @@ import z from "zod";
 const envSchema = z.object({
   VERBOSE: z.stringbool(),
 
+  USER_NAME: z.string().min(1),
+  AGENT_NAME: z.string().min(1),
+
   OPENAI_MODEL: z.string().min(1),
   OPENAI_BASE_URL: z.string().min(1),
   OPENAI_API_KEY: z.string().min(1),
@@ -31,8 +34,8 @@ const envSchema = z.object({
   IMAP_PORT: z.coerce.number(),
   IMAP_SECURE: z.stringbool(),
 
-  USER_NAME: z.string().min(1),
-  PASSWORD: z.string().min(1),
+  MAIL_USER_NAME: z.string().min(1),
+  MAIL_PASSWORD: z.string().min(1),
 
   SENDER_NAME: z.string().min(1),
   SENDER_EMAIL: z.string().min(1),
