@@ -4,7 +4,7 @@ import { input, select } from "@inquirer/prompts";
 import boxen, { type Options as BoxenOptions } from "boxen";
 
 import { Agent, type AgentMessages } from "../agents";
-import { config } from "../utils";
+import { config } from "../config.ts";
 
 type Command = "save" | "load" | "regenerate" | "undo" | "cancel";
 
@@ -106,7 +106,7 @@ export class TUI {
     console.log(
       boxen(msg, {
         ...commonBoxenOptions,
-        title: config.USER_NAME,
+        title: config.userName,
         borderColor: "green",
       }),
     );
@@ -116,14 +116,14 @@ export class TUI {
     console.log(
       boxen(msg, {
         ...commonBoxenOptions,
-        title: config.AGENT_NAME,
+        title: config.agentName,
         borderColor: "cyan",
       }),
     );
   }
 
   private logInfo(msg: string, data?: string) {
-    if (config.VERBOSE) {
+    if (config.verbose) {
       const msgFmt = data ? `${msg}: ` : msg;
       console.log(chalk.grey(`○ ${chalk.bold(msgFmt)}${data ?? ""}`));
     }

@@ -2,10 +2,11 @@ import { spawn } from "node:child_process";
 import z from "zod";
 
 import { StandaloneTool } from "./StandaloneTool";
-import { config } from "../../utils";
+import { config } from "../../config";
 
 const PYTHON_EXECUTION_TIMEOUT = 30000;
 const CONTAINER_WORKDIR = "/data";
+const DEFAULT_DOCKER_IMAGE_TAG = "python:3.14-slim";
 
 export const runPython = new StandaloneTool({
   name: "run_python",
@@ -19,12 +20,12 @@ export const runPython = new StandaloneTool({
       const docker = spawn("docker", [
         "run",
         "--mount",
-        `type=bind,source=${config.WORKING_DIRECTORY},target=/${CONTAINER_WORKDIR}`,
+        `type=bind,source=${config.workingDirPath},target=/${CONTAINER_WORKDIR}`,
         "--workdir",
         CONTAINER_WORKDIR,
         "--rm",
         "-i",
-        config.PYTHON_DOCKER_IMAGE_TAG,
+        config.tools.runPython?.dockerImageTag ?? DEFAULT_DOCKER_IMAGE_TAG,
         "python",
         "-",
       ]);

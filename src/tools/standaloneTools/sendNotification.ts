@@ -2,7 +2,11 @@ import { execFile } from "node:child_process";
 import z from "zod";
 
 import { StandaloneTool } from "./StandaloneTool";
-import { config } from "../../utils";
+import { config } from "../../config";
+
+const DEFAULT_APP_NAME = "MAI";
+const DEFAULT_APP_DESKTOP_ENTRY = "mai";
+const DEFAULT_TIMEOUT = "10000"; // 10 seconds
 
 export const sendNotification = new StandaloneTool({
   name: "send_notification",
@@ -16,11 +20,11 @@ export const sendNotification = new StandaloneTool({
       execFile(
         "/usr/bin/notify-send",
         [
-          `--hint=string:desktop-entry:${config.NOTIFICATION_APP_DESKTOP_ENTRY}`,
+          `--hint=string:desktop-entry:${config.tools.sendNotification?.appDesktopEntry ?? DEFAULT_APP_DESKTOP_ENTRY}`,
           "--app-name",
-          config.NOTIFICATION_APP_NAME,
+          config.tools.sendNotification?.appName ?? DEFAULT_APP_NAME,
           "-t",
-          config.NOTIFICATION_TIMEOUT,
+          config.tools.sendNotification?.timeout ?? DEFAULT_TIMEOUT,
           title,
           message,
         ],

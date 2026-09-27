@@ -1,6 +1,6 @@
 import { MCPClient } from "./MCPClient";
 
-import { config } from "../../utils";
+import { config } from "../../config";
 
 export const filesystemMcp = new MCPClient({
   name: "filesystem",
@@ -8,7 +8,7 @@ export const filesystemMcp = new MCPClient({
   args: [
     "-y",
     "@modelcontextprotocol/server-filesystem@latest",
-    config.WORKING_DIRECTORY,
+    config.workingDirPath,
   ],
   allowedTools: [
     "read_text_file",

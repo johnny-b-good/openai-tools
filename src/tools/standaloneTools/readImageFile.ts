@@ -4,7 +4,7 @@ import * as path from "node:path";
 
 import { StandaloneTool } from "./StandaloneTool";
 import { openai } from "../../consts";
-import { config } from "../../utils";
+import { config } from "../../config";
 
 export const readImageFile = new StandaloneTool({
   name: "read_image_file",
@@ -53,7 +53,7 @@ export const readImageFile = new StandaloneTool({
       const dataUrl = `data:${mimeType};base64,${base64Image}`;
 
       const response = await openai.chat.completions.create({
-        model: config.OPENAI_MODEL,
+        model: config.api.model,
         messages: [
           {
             role: "user",

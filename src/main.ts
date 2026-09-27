@@ -1,23 +1,20 @@
-import fs from "node:fs/promises";
-
-import { config } from "./utils";
-import { systemPromptTemplate } from "./templates";
-import { openai } from "./consts.ts";
+import { buildSystemPrompt, type SystemPromptContext } from "./utils";
+import { config } from "./config";
+import { openai } from "./consts";
 import { ToolRouter } from "./tools";
 import { Agent, type AgentMessages } from "./agents";
 import { TUI } from "./tui";
 
 const main = async () => {
-  const extraSystemPrompt = await fs.readFile(
-    config.EXTRA_SYSTEM_PROMPT,
-    "utf-8",
-  );
-
-  const systemPrompt = systemPromptTemplate({
+  const systemPromptContext: SystemPromptContext = {
     currentTime: new Date().toLocaleString(),
-    workingDirectory: config.WORKING_DIRECTORY,
-    extraSystemPrompt,
-  });
+    workingDirectory: config.workingDirPath,
+  };
+
+  const systemPrompt = buildSystemPrompt(
+    config.promptPartsPaths,
+    systemPromptContext,
+  );
 
   const messages: AgentMessages = [
     {
@@ -28,7 +25,7 @@ const main = async () => {
 
   const agent = new Agent({
     openai,
-    modelName: config.OPENAI_MODEL,
+    modelName: config.api.model,
     toolRouter: new ToolRouter(),
   });
 

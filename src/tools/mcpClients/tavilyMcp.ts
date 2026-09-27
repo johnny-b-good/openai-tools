@@ -1,15 +1,17 @@
 import { MCPClient } from "./MCPClient";
 
-import { config } from "../../utils";
+import { config } from "../../config";
 
 export const tavilyMcp = new MCPClient({
   name: "tavily",
   command: "npx",
   args: ["-y", "tavily-mcp@latest"],
-  env: {
-    TAVILY_API_KEY: config.TAVILY_API_KEY,
-    HTTP_PROXY: config.PROXY_URL,
-    HTTPS_PROXY: config.PROXY_URL,
-  },
+  env: config.mcps.tavily?.enabled
+    ? {
+        TAVILY_API_KEY: config.mcps.tavily.tavilyApiKey,
+        HTTP_PROXY: config.mcps.tavily.proxyUrl,
+        HTTPS_PROXY: config.mcps.tavily.proxyUrl,
+      }
+    : undefined,
   allowedTools: ["tavily_search", "tavily_extract"],
 });
