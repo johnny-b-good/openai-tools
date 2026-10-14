@@ -92,6 +92,15 @@ export const ConfigSchema = z.object({
         lastMessagesNum: z.number(),
       })
       .optional(),
+
+    yandex: z
+      .object({
+        enabled: z.boolean(),
+
+        apiKey: z.string(),
+        folderId: z.string(),
+      })
+      .optional(),
   }),
 });
 

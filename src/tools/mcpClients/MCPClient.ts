@@ -17,6 +17,7 @@ export class MCPClient {
 
   private command: string;
   private args: Array<string>;
+  private cwd?: string;
   private mcp: Client;
   private transport: StdioClientTransport | null = null;
   private env?: Record<string, string>;
@@ -26,18 +27,21 @@ export class MCPClient {
     name,
     command,
     args,
+    cwd,
     allowedTools,
     env,
   }: {
     name: string;
     command: string;
     args: Array<string>;
+    cwd?: string;
     allowedTools?: Array<string>;
     env?: Record<string, string>;
   }) {
     this.name = name;
     this.command = command;
     this.args = args;
+    this.cwd = cwd;
     this.mcp = new Client({
       name: this.name,
       version: "1.0.0",
@@ -51,6 +55,7 @@ export class MCPClient {
       this.transport = new StdioClientTransport({
         command: this.command,
         args: this.args,
+        cwd: this.cwd,
         env: this.env,
       });
 
