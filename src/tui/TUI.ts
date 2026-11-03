@@ -1,7 +1,6 @@
 import chalk from "chalk";
 import ora from "ora";
 import { input, select } from "@inquirer/prompts";
-import boxen, { type Options as BoxenOptions } from "boxen";
 
 import { Agent, type AgentMessages } from "../agents";
 import { config } from "../config.ts";
@@ -12,14 +11,6 @@ const spinner = ora({
   text: "Thinking",
   spinner: "dots13",
 });
-
-const commonBoxenOptions: BoxenOptions = {
-  titleAlignment: "left",
-  maxWidth: 80,
-  margin: 0,
-  padding: 1,
-  dimBorder: true,
-};
 
 export class TUI {
   private agent: Agent;
@@ -104,21 +95,13 @@ export class TUI {
 
   private logPrompt(msg: string) {
     console.log(
-      boxen(msg, {
-        ...commonBoxenOptions,
-        title: config.userName,
-        borderColor: "green",
-      }),
+      `${chalk.cyan("●")} ${chalk.bold(`${config.userName}:`)} ${msg}`,
     );
   }
 
   private logReply(msg: string) {
     console.log(
-      boxen(msg, {
-        ...commonBoxenOptions,
-        title: config.agentName,
-        borderColor: "cyan",
-      }),
+      `${chalk.green("●")} ${chalk.bold(`${config.agentName}:`)} ${msg}`,
     );
   }
 
